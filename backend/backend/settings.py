@@ -34,11 +34,13 @@ INSTALLED_APPS = [
     "courses",
     "quizzes",
     "media_content",
+    "progress",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -50,7 +52,25 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'backend.urls'
 
-CORS_ALLOW_ALL_ORIGINS = True
+#CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# =========================
+# Configuración Allauth
+# =========================
+ACCOUNT_AUTHENTICATION_METHOD = "username"   # Usar username, no email
+ACCOUNT_EMAIL_REQUIRED = False               # Email no obligatorio
+ACCOUNT_USERNAME_REQUIRED = True             # Username sí obligatorio
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+ACCOUNT_EMAIL_VERIFICATION = "none"          # Sin verificación de correo
+ACCOUNT_CONFIRM_EMAIL_ON_GET = False
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5             # Intentos máximos de login
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300         # Bloqueo en segundos (5 min)
 
 TEMPLATES = [
     {
@@ -84,8 +104,11 @@ DATABASES = {
 
 # DRF + JWT
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
     ),
 }
 

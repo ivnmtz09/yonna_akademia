@@ -1,3 +1,9 @@
-from django.shortcuts import render
+from rest_framework import viewsets
+from .models import MediaContent
+from .serializers import MediaContentSerializer
+from users.permissions import IsAdmin, IsTeacherOrReadOnly
 
-# Create your views here.
+class MediaContentViewSet(viewsets.ModelViewSet):
+    queryset = MediaContent.objects.all()
+    serializer_class = MediaContentSerializer
+    permission_classes = [IsTeacherOrReadOnly | IsAdmin]
