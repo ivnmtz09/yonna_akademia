@@ -1,23 +1,42 @@
-# Python
-*.pyc
-__pycache__/
-*.pyo
-*.pyd
-*.sqlite3
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+flutter_export_environment.sh
+Generated.xcconfig
+*.migrate
 
-# Virtual env
-venv/
-.env
+# Android / iOS / Web builds
+**/ios/Flutter/.last_build_id
+android/app/debug/
+android/app/profile/
+android/app/release/
+web/
+windows/
+macos/
+linux/
 
-# Django
-db.sqlite3
-/media/
-staticfiles/
-
-# VSCode / PyCharm
-.vscode/
+# IDEs
 .idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
 
-# Mac / Windows
-.DS_Store
-Thumbs.db
+# Logs / temp
+*.log
+*.tmp
+*.lock
+*.bak
+
+# Obfuscation / symbolication
+app.*.map.json
+app.*.symbols
+
+# Secure storage / keys
+google-services.json
+GoogleService-Info.plist
+.env

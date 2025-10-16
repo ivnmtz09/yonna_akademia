@@ -8,45 +8,50 @@ from rest_framework.settings import api_settings
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY", default="unsafe-secret-key")
-
 DEBUG = config("DEBUG", default=False, cast=bool)
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': False,
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-    'JWK_URL': None,
-    'LEEWAY': 0,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
-
-    'JTI_CLAIM': 'jti',
-
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
-}
-
 
 ALLOWED_HOSTS = ["*"]
 
+# =========================
+# Google OAuth2
+# =========================
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': config('GOOGLE_CLIENT_ID'),
+            'secret': config('GOOGLE_CLIENT_SECRET'),
+            'key': ''
+        },
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+    }
+}
+
+SITE_ID = 1
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+# =========================
+# Django Allauth / REST Auth
+# =========================
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_CONFIRM_EMAIL_ON_GET = False
+ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
+ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300
+
 INSTALLED_APPS = [
+    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -66,13 +71,13 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     "corsheaders",
 
-    # apps
-    'core',
-    "users",
-    "courses",
-    "quizzes",
-    "media_content",
-    "progress",
+    # Apps propias
+    'apps.users',
+    'apps.courses',
+    'apps.media_content',
+    'apps.quizzes',
+    'apps.progress',
+    'apps.core',
 ]
 
 MIDDLEWARE = [
@@ -90,6 +95,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'backend.urls'
 
 CORS_ALLOWED_ORIGINS = [
+    "http://192.168.1.4:8080", 
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
@@ -112,12 +118,13 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # =========================
 # Configuración Allauth
 # =========================
-ACCOUNT_AUTHENTICATION_METHOD = "username"   # Usar username, no email
-ACCOUNT_EMAIL_REQUIRED = False               # Email no obligatorio
-ACCOUNT_USERNAME_REQUIRED = True             # Username sí obligatorio
+ACCOUNT_AUTHENTICATION_METHOD = "email"  # Autenticación por email
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "none"          # Sin verificación de correo
+ACCOUNT_EMAIL_VERIFICATION = "optional"
+ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_CONFIRM_EMAIL_ON_GET = False
 ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5             # Intentos máximos de login
 ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300         # Bloqueo en segundos (5 min)
