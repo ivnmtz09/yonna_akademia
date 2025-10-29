@@ -1,102 +1,81 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState } from "react";
-import { AuthProvider } from "./context/AuthContext";
-import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
-import Profile from "./pages/Profile";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Footer from "./components/Footer";
-import "./index.css";
-import "./App.css";
-import "./styles/components.css";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext';
+import { useState } from 'react';
+import Topbar from './components/common/Topbar';
+import Sidebar from './components/common/Sidebar';
+import HomePage from './pages/HomePage';
+import ProfilePage from './components/profile/ProfilePage';
+import LoginModal from './components/auth/LoginModal';
+import RegisterModal from './components/auth/RegisterModal';
 
 function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
 
-  const openLogin = () => {
-    setShowRegister(false);
-    setShowLogin(true);
-  };
-
-  const openRegister = () => {
+  const handleSwitchToRegister = () => {
     setShowLogin(false);
     setShowRegister(true);
   };
 
-  const closeModals = () => {
-    setShowLogin(false);
+  const handleSwitchToLogin = () => {
     setShowRegister(false);
+    setShowLogin(true);
   };
 
   return (
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-50">
-          <Navbar onLoginClick={openLogin} onRegisterClick={openRegister} />
-          <main>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <Home
-                    onLoginClick={openLogin}
-                    onRegisterClick={openRegister}
-                  />
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </main>
+          <Topbar />
+          <Sidebar
+            onOpenLogin={() => setShowLogin(true)}
+            onOpenRegister={() => setShowRegister(true)}
+          />
 
-          {/* Modales de Login y Registro */}
-          {showLogin && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 relative">
-                <button
-                  onClick={closeModals}
-                  className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-                <Login
-                  onSwitchToRegister={() => {
-                    setShowLogin(false);
-                    setShowRegister(true);
-                  }}
-                />
-              </div>
-            </div>
-          )}
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/perfil" element={<ProfilePage />} />
+            <Route path="/cursos" element={<div className="pt-20 pl-64 p-8">Cursos - En construcción</div>} />
+            <Route path="/quizzes" element={<div className="pt-20 pl-64 p-8">Quizzes - En construcción</div>} />
+          </Routes>
 
-          {showRegister && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 relative">
-                <button
-                  onClick={closeModals}
-                  className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-                <Register
-                  onSwitchToLogin={() => {
-                    setShowRegister(false);
-                    setShowLogin(true);
-                  }}
-                />
-              </div>
-            </div>
-          )}
-          <Footer />
+          <LoginModal
+            isOpen={showLogin}
+            onClose={() => setShowLogin(false)}
+            onSwitchToRegister={handleSwitchToRegister}
+          />
+
+          <RegisterModal
+            isOpen={showRegister}
+            onClose={() => setShowRegister(false)}
+            onSwitchToLogin={handleSwitchToLogin}
+          />
+
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: '#00b894',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                duration: 4000,
+                iconTheme: {
+                  primary: '#ff4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </div>
       </Router>
     </AuthProvider>
