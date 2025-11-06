@@ -1,16 +1,19 @@
-"""
-ASGI config for backend project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.2/howto/deployment/asgi/
-"""
-
 import os
-
+from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
+from django.urls import path
+from channels.auth import AuthMiddlewareStack
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
 
-application = get_asgi_application()
+import apps.notifications.routing as notifications_routing
+from apps.notifications.middleware import JWTAuthMiddlewareStack
+
+application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+    "websocket": JWTAuthMiddlewareStack(
+        URLRouter(
+            notifications_routing.websocket_urlpatterns
+        )
+    ),
+})

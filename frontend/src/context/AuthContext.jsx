@@ -19,8 +19,10 @@ export const AuthProvider = ({ children }) => {
         const response = await api.get('/auth/profile/');
         setUser(response.data);
       } catch (error) {
+        console.error('Error checking auth:', error);
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        setUser(null);
       }
     }
     setLoading(false);
@@ -30,7 +32,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/register/', userData);
       
-      // El backend devuelve los tokens después del registro
       if (response.data.access && response.data.refresh) {
         localStorage.setItem('access_token', response.data.access);
         localStorage.setItem('refresh_token', response.data.refresh);
@@ -38,11 +39,11 @@ export const AuthProvider = ({ children }) => {
         toast.success('Registro exitoso');
         return { success: true };
       } else {
-        // Si no hay tokens, solo mostrar mensaje de éxito
         toast.success('Registro exitoso. Por favor, inicia sesión.');
         return { success: true, needsLogin: true };
       }
     } catch (error) {
+      console.error('Registration error:', error);
       const errorMsg = error.response?.data?.email?.[0] || 
                        error.response?.data?.password1?.[0] ||
                        error.response?.data?.non_field_errors?.[0] ||
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
     } catch (error) {
+      console.error('Login error:', error);
       const errorMsg = error.response?.data?.non_field_errors?.[0] ||
                        error.response?.data?.detail ||
                        'Credenciales incorrectas';
@@ -74,9 +76,14 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithGoogle = async (accessToken) => {
     try {
+      console.log('Attempting Google login with token:', accessToken);
+      
+      // El backend de Django espera el token en el campo "access_token"
       const response = await api.post('/auth/google/', {
         access_token: accessToken,
       });
+      
+      console.log('Google login response:', response.data);
       
       if (response.data.access && response.data.refresh) {
         localStorage.setItem('access_token', response.data.access);
@@ -86,8 +93,14 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
     } catch (error) {
-      toast.error('Error al iniciar sesión con Google');
-      return { success: false };
+      console.error('Google login error:', error);
+      console.error('Error response:', error.response?.data);
+      
+      const errorMsg = error.response?.data?.non_field_errors?.[0] ||
+                       error.response?.data?.detail ||
+                       'Error al iniciar sesión con Google';
+      toast.error(errorMsg);
+      return { success: false, error: errorMsg };
     }
   };
 
@@ -105,6 +118,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Perfil actualizado');
       return { success: true };
     } catch (error) {
+      console.error('Profile update error:', error);
       toast.error('Error al actualizar el perfil');
       return { success: false };
     }

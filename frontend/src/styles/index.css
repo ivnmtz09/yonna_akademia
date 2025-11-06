@@ -1,21 +1,51 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* src/styles/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+@import "tailwindcss";
+
+/* Configuración de tema en Tailwind v4 */
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  
+  --color-yonna-orange: #ff914d;
+  --color-yonna-orange-dark: #ff7a2e;
+  --color-yonna-green: #00b894;
+}
+
+/* Estilos globales */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html,
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  height: 100%;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100vh;
+  height: 100%;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-yonna-orange);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-yonna-orange-dark);
 }

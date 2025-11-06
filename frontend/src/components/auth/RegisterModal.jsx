@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Modal from '../common/Modal';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import toast from 'react-hot-toast';
 
 const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const { register, loginWithGoogle } = useAuth();
@@ -60,7 +61,6 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
     if (result.success) {
       if (result.needsLogin) {
-        // Si el backend no devuelve tokens, redirigir al login
         onSwitchToLogin();
       } else {
         onClose();
@@ -78,17 +78,34 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
   const googleRegister = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      console.log('Google OAuth Success:', tokenResponse);
       setLoading(true);
-      const result = await loginWithGoogle(tokenResponse.access_token);
-      setLoading(false);
       
-      if (result.success) {
-        onClose();
+      try {
+        const result = await loginWithGoogle(tokenResponse.access_token);
+        
+        if (result.success) {
+          onClose();
+          setFormData({
+            first_name: '',
+            last_name: '',
+            email: '',
+            password1: '',
+            password2: '',
+          });
+        }
+      } catch (error) {
+        console.error('Error in Google register flow:', error);
+        toast.error('Error al registrarse con Google');
+      } finally {
+        setLoading(false);
       }
     },
-    onError: () => {
-      console.error('Google register failed');
+    onError: (error) => {
+      console.error('Google OAuth Error:', error);
+      toast.error('Error al conectar con Google');
     },
+    flow: 'implicit',
   });
 
   return (

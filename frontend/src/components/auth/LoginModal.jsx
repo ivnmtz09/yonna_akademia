@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Modal from '../common/Modal';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import toast from 'react-hot-toast';
 
 const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
   const { login, loginWithGoogle } = useAuth();
@@ -40,17 +41,28 @@ const LoginModal = ({ isOpen, onClose, onSwitchToRegister }) => {
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
+      console.log('Google OAuth Success:', tokenResponse);
       setLoading(true);
-      const result = await loginWithGoogle(tokenResponse.access_token);
-      setLoading(false);
       
-      if (result.success) {
-        onClose();
+      try {
+        const result = await loginWithGoogle(tokenResponse.access_token);
+        
+        if (result.success) {
+          onClose();
+          setFormData({ email: '', password: '' });
+        }
+      } catch (error) {
+        console.error('Error in Google login flow:', error);
+        toast.error('Error al iniciar sesión con Google');
+      } finally {
+        setLoading(false);
       }
     },
-    onError: () => {
-      console.error('Google login failed');
+    onError: (error) => {
+      console.error('Google OAuth Error:', error);
+      toast.error('Error al conectar con Google');
     },
+    flow: 'implicit',
   });
 
   return (

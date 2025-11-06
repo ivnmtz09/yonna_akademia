@@ -1,14 +1,12 @@
 import os
 from pathlib import Path
 from decouple import config
-import dj_database_url
 from datetime import timedelta
-from rest_framework.settings import api_settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY", default="unsafe-secret-key")
-DEBUG = config("DEBUG", default=False, cast=bool)
+DEBUG = config("DEBUG", default=True, cast=bool)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -18,17 +16,12 @@ ALLOWED_HOSTS = ["*"]
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
-            'client_id': config('GOOGLE_CLIENT_ID'),
-            'secret': config('GOOGLE_CLIENT_SECRET'),
+            'client_id': config('GOOGLE_CLIENT_ID', default=''),
+            'secret': config('GOOGLE_CLIENT_SECRET', default=''),
             'key': ''
         },
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
     }
 }
 
@@ -50,6 +43,9 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = False
 ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5
 ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300
 
+# =========================
+# Aplicaciones instaladas
+# =========================
 INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.admin',
@@ -59,7 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Apps externas
+    # Librerías externas
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
@@ -69,15 +65,19 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    "corsheaders",
+    'corsheaders',
+    'channels',  # <-- Agregado
 
-    # Apps propias
-    'apps.users',
+    # Apps del proyecto
+    'apps.users.apps.UsersConfig',
     'apps.courses',
     'apps.media_content',
     'apps.quizzes',
     'apps.progress',
     'apps.core',
+    'apps.notifications',
+    'apps.reports',
+    'apps.stats',
 ]
 
 MIDDLEWARE = [
@@ -94,41 +94,30 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'backend.urls'
 
+# =========================
+# CORS
+# =========================
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.1.4:8080", 
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://192.168.1.4:8080",  # Para conexión desde móvil
 ]
-
-CORS_ALLOW_CREDENTIALS = True
-
 CORS_ALLOWED_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    'accept', 'accept-encoding', 'authorization',
+    'content-type', 'dnt', 'origin', 'user-agent',
+    'x-csrftoken', 'x-requested-with',
 ]
 
+# =========================
+# Email
+# =========================
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-# =========================
-# Configuración Allauth
-# =========================
-ACCOUNT_AUTHENTICATION_METHOD = "email"  # Autenticación por email
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
-ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
-ACCOUNT_EMAIL_VERIFICATION = "optional"
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_CONFIRM_EMAIL_ON_GET = False
-ACCOUNT_LOGIN_ATTEMPTS_LIMIT = 5             # Intentos máximos de login
-ACCOUNT_LOGIN_ATTEMPTS_TIMEOUT = 300         # Bloqueo en segundos (5 min)
 
+# =========================
+# Templates
+# =========================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -145,9 +134,15 @@ TEMPLATES = [
     },
 ]
 
+# =========================
+# WSGI / ASGI
+# =========================
 WSGI_APPLICATION = 'backend.wsgi.application'
+ASGI_APPLICATION = 'backend.asgi.application'  # <-- Para WebSockets
 
+# =========================
 # Base de datos
+# =========================
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -159,7 +154,18 @@ DATABASES = {
     }
 }
 
+# =========================
+# Django Channels (sin Redis)
+# =========================
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
+
+# =========================
 # DRF + JWT
+# =========================
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -174,6 +180,9 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
+# =========================
+# Configuración general
+# =========================
 LANGUAGE_CODE = "es-es"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True

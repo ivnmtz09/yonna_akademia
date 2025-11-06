@@ -1,19 +1,9 @@
 from django.contrib import admin
-from .models import CourseProgress, LessonProgress, QuizProgress
-
-@admin.register(CourseProgress)
-class CourseProgressAdmin(admin.ModelAdmin):
-    list_display = ("user", "course", "progress_percent", "completed", "updated_at")
-    list_filter = ("completed", "updated_at")
+from .models import Progress
 
 
-@admin.register(LessonProgress)
-class LessonProgressAdmin(admin.ModelAdmin):
-    list_display = ("user", "lesson", "completed", "updated_at")
-    list_filter = ("completed", "updated_at")
-
-
-@admin.register(QuizProgress)
-class QuizProgressAdmin(admin.ModelAdmin):
-    list_display = ("user", "quiz", "score", "completed", "completed_at")
-    list_filter = ("completed", "completed_at")
+@admin.register(Progress)
+class ProgressAdmin(admin.ModelAdmin):
+    list_display = ("user", "course", "percentage", "xp_earned", "updated_at")
+    search_fields = ("user__email", "course__title")
+    list_filter = ("course__level_required",)

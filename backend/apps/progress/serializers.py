@@ -1,19 +1,15 @@
 from rest_framework import serializers
-from .models import CourseProgress, LessonProgress, QuizProgress
+from .models import Progress
+from apps.courses.serializers import CourseSerializer
 
-class CourseProgressSerializer(serializers.ModelSerializer):
+
+class ProgressSerializer(serializers.ModelSerializer):
+    course = CourseSerializer(read_only=True)
+
     class Meta:
-        model = CourseProgress
-        fields = "__all__"
-
-
-class LessonProgressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LessonProgress
-        fields = "__all__"
-
-
-class QuizProgressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = QuizProgress
-        fields = "__all__"
+        model = Progress
+        fields = [
+            "id", "course", "completed_quizzes", "total_quizzes",
+            "percentage", "xp_earned", "updated_at"
+        ]
+        read_only_fields = fields

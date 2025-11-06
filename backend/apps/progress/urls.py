@@ -1,9 +1,7 @@
-from rest_framework.routers import DefaultRouter
-from .views import CourseProgressViewSet, LessonProgressViewSet, QuizProgressViewSet
+from django.urls import path
+from .views import UserProgressView, CourseProgressView
 
-router = DefaultRouter()
-router.register(r"course-progress", CourseProgressViewSet)
-router.register(r"lesson-progress", LessonProgressViewSet)
-router.register(r"quiz-progress", QuizProgressViewSet)
-
-urlpatterns = router.urls
+urlpatterns = [
+    path("", UserProgressView.as_view(), name="user-progress"),
+    path("<int:course_id>/", CourseProgressView.as_view(), name="course-progress"),
+]

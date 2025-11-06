@@ -39,15 +39,12 @@ class User(AbstractUser):
         ("student", "Estudiante"),
     )
 
-    LEVEL_CHOICES = (
-        ("beginner", "Principiante"),
-        ("intermediate", "Intermedio"),
-        ("advanced", "Avanzado"),
-    )
-
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
-    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default="beginner")
     bio = models.TextField("biografía corta", blank=True, null=True)
+
+    # Sistema de niveles con XP
+    level = models.PositiveIntegerField(default=1)
+    xp = models.PositiveIntegerField(default=0)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -57,6 +54,31 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.email} ({self.role})"
 
+    # --- Lógica de XP y Niveles ---
+    def add_xp(self, amount, source="quiz"):
+        """Añade XP al usuario y registra el evento automáticamente."""
+        if amount <= 0:
+            return
+
+        old_xp = self.xp
+        self.xp += amount
+        self.save(update_fields=["xp"])
+        self._update_level()  # recalcula el nivel si es necesario
+
+        # Lanza una signal para registrar el evento en XpHistory
+        from apps.users.signals import xp_gained_signal
+        xp_gained_signal.send(sender=self.__class__, user=self, amount=amount, source=source)
+
+
+    def _update_level(self):
+        thresholds = [0, 100, 250, 500, 1000, 2000, 4000, 8000]
+        new_level = 1
+        for i, threshold in enumerate(thresholds, start=1):
+            if self.xp >= threshold:
+                new_level = i
+        if self.level != new_level:
+            self.level = new_level
+            self.save(update_fields=["level"])
 
 class Profile(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name="perfil")

@@ -10,13 +10,13 @@ User = get_user_model()
 # --- FORMULARIOS PERSONALIZADOS ---
 
 class CustomUserCreationForm(forms.ModelForm):
-    """Formulario para crear usuarios desde admin."""
+    """Formulario para crear usuarios desde el panel de administración."""
     password1 = forms.CharField(label="Contraseña", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirmar contraseña", widget=forms.PasswordInput)
 
     class Meta:
         model = User
-        fields = ("email", "first_name", "last_name", "role", "level")
+        fields = ("email", "first_name", "last_name", "role", "level", "xp")
 
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1")
@@ -32,47 +32,50 @@ class CustomUserCreationForm(forms.ModelForm):
             user.save()
         return user
 
+
 class CustomUserChangeForm(forms.ModelForm):
     """Formulario para editar usuarios existentes desde admin."""
-    password = ReadOnlyPasswordHashField(label="Contraseña", help_text=(
-        "Las contraseñas sin formato no se almacenan, por lo que no hay forma de ver esta contraseña, "
-        "pero puedes cambiarla usando <a href=\"../password/\">este formulario</a>."
-    ))
+    password = ReadOnlyPasswordHashField(
+        label="Contraseña",
+        help_text=(
+            "Las contraseñas sin formato no se almacenan, por lo que no hay forma de ver esta contraseña, "
+            "pero puedes cambiarla usando <a href=\"../password/\">este formulario</a>."
+        )
+    )
 
     class Meta:
         model = User
         fields = (
-            "email",
-            "first_name",
-            "last_name",
-            "role",
-            "level",
-            "is_active",
-            "is_staff",
-            "is_superuser",
-            "groups",
-            "user_permissions",
+            "email", "first_name", "last_name", "role", "bio",
+            "level", "xp", "is_active", "is_staff", "is_superuser",
+            "groups", "user_permissions",
         )
+
 
 # --- ADMIN PERSONALIZADO ---
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
+    """Configuración del panel de administración para el modelo User."""
+
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
 
-    list_display = ("id", "email", "first_name", "last_name", "role", "level", "is_active", "is_staff")
+    list_display = (
+        "id", "email", "first_name", "last_name",
+        "role", "level", "xp", "is_active", "is_staff"
+    )
     search_fields = ("email", "first_name", "last_name")
     ordering = ("email",)
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Información personal", {"fields": ("first_name", "last_name", "bio")}),
+        ("Progreso del usuario", {"fields": ("level", "xp")}),
         ("Roles y permisos", {
             "fields": (
                 "role",
-                "level",
                 "is_active",
                 "is_staff",
                 "is_superuser",
@@ -94,6 +97,7 @@ class CustomUserAdmin(UserAdmin):
                 "last_name",
                 "role",
                 "level",
+                "xp",
                 "password1",
                 "password2",
                 "is_staff",
@@ -105,5 +109,7 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
+    """Configuración del panel de administración para los perfiles de usuario."""
     list_display = ("usuario", "localidad", "telefono", "creado")
-    search_fields = ("usuario__email",)
+    search_fields = ("usuario__email", "localidad", "telefono")
+    readonly_fields = ("creado", "actualizado")

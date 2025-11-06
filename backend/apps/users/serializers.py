@@ -13,8 +13,11 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email", "username", "role", "level", "bio", "first_name", "last_name"]
-        read_only_fields = ["id"]
+        fields = [
+            "id", "email", "username", "role", "bio",
+            "level", "xp", "first_name", "last_name"
+        ]
+        read_only_fields = ["id", "level", "xp"]
 
 
 # ------------------------------
@@ -64,18 +67,13 @@ class ProfileSerializer(serializers.ModelSerializer):
 # ------------------------------
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
-    password1 = serializers.CharField(write_only=True, required=True)
-    password2 = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True)
 
     def validate(self, attrs):
         email = attrs.get("email")
-        password1 = attrs.get("password1")
-        password2 = attrs.get("password2")
+        password = attrs.get("password")
 
-        if password1 != password2:
-            raise serializers.ValidationError({"password2": "Las contraseñas no coinciden."})
-
-        user = authenticate(email=email, password=password1)
+        user = authenticate(email=email, password=password)
         if not user:
             raise serializers.ValidationError({"error": "Credenciales inválidas."})
         if not user.is_active:
@@ -94,6 +92,25 @@ class LoginSerializer(serializers.Serializer):
             "email": user.email,
             "role": user.role,
             "level": user.level,
+            "xp": user.xp,
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
+
+
+# ------------------------------
+# SERIALIZER PARA SUMAR XP
+# ------------------------------
+class XPUpdateSerializer(serializers.Serializer):
+    xp_amount = serializers.IntegerField(min_value=1)
+
+    def validate_xp_amount(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("La cantidad de XP debe ser positiva.")
+        return value
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        xp_amount = self.validated_data["xp_amount"]
+        user.add_xp(xp_amount)
+        return user

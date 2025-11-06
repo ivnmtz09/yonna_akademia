@@ -1,10 +1,8 @@
-from rest_framework.routers import DefaultRouter
-from .views import QuizViewSet, QuestionViewSet, AnswerViewSet, QuizResultViewSet
+from django.urls import path
+from .views import AvailableQuizzesView, CreateQuizView, QuizAttemptView
 
-router = DefaultRouter()
-router.register(r"quizzes", QuizViewSet)
-router.register(r"questions", QuestionViewSet)
-router.register(r"answers", AnswerViewSet)
-router.register(r"results", QuizResultViewSet)
-
-urlpatterns = router.urls
+urlpatterns = [
+    path("available/", AvailableQuizzesView.as_view(), name="available-quizzes"),
+    path("create/", CreateQuizView.as_view(), name="create-quiz"),
+    path("attempt/", QuizAttemptView.as_view(), name="attempt-quiz"),
+]

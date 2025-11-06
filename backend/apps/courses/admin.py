@@ -1,15 +1,16 @@
 from django.contrib import admin
-from .models import Course, Lesson
+from .models import Course, Enrollment
+
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "teacher", "created_at")
-    search_fields = ("title", "description", "teacher__username")
-    list_filter = ("created_at",)
+    list_display = ("title", "level_required", "created_by", "is_active", "created_at")
+    list_filter = ("level_required", "is_active")
+    search_fields = ("title", "description")
 
 
-@admin.register(Lesson)
-class LessonAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "course", "created_at")
-    search_fields = ("title", "content")
-    list_filter = ("course", "created_at")
+@admin.register(Enrollment)
+class EnrollmentAdmin(admin.ModelAdmin):
+    list_display = ("user", "course", "progress", "enrolled_at")
+    search_fields = ("user__email", "course__title")
+    list_filter = ("course__level_required",)

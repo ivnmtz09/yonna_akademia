@@ -1,24 +1,43 @@
 from django.db import models
 from django.conf import settings
 
-User = settings.AUTH_USER_MODEL
 
 class Course(models.Model):
-    title = models.CharField(max_length=255)
+    """Representa un curso desbloqueable según el nivel del estudiante."""
+
+    LEVEL_CHOICES = [(i, f"Nivel {i}") for i in range(1, 11)]
+
+    title = models.CharField(max_length=200)
     description = models.TextField()
+    level_required = models.PositiveIntegerField(choices=LEVEL_CHOICES, default=1)
+    is_active = models.BooleanField(default=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="courses_created"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name="courses")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["level_required", "title"]
 
     def __str__(self):
-        return self.title
+        return f"{self.title} (Nivel {self.level_required})"
 
 
-class Lesson(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="lessons")
-    title = models.CharField(max_length=255)
-    content = models.TextField()
-    video_url = models.URLField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+class Enrollment(models.Model):
+    """Registra la inscripción de un estudiante en un curso."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="enrollments")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="enrollments")
+    progress = models.FloatField(default=0.0)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "course")
 
     def __str__(self):
-        return f"{self.course.title} - {self.title}"
+        return f"{self.user.email} en {self.course.title} ({self.progress}%)"

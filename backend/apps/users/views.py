@@ -1,11 +1,16 @@
+from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
-from rest_framework import status
-from .google_auth import google_authenticate
-from rest_framework import generics, permissions
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer, UserSerializer, ProfileSerializer, LoginSerializer
+from .serializers import (
+    RegisterSerializer,
+    UserSerializer,
+    ProfileSerializer,
+    LoginSerializer,
+    XPUpdateSerializer,
+)
 from .models import Profile
+from .google_auth import google_authenticate
 
 User = get_user_model()
 
@@ -20,7 +25,7 @@ class RegisterView(generics.CreateAPIView):
 
 
 # ------------------------------
-# LOGIN PERSONALIZADO
+# LOGIN
 # ------------------------------
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
@@ -34,7 +39,7 @@ class LoginView(generics.GenericAPIView):
 
 
 # ------------------------------
-# PERFIL Y DETALLE DE USUARIO
+# PERFIL
 # ------------------------------
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
@@ -44,10 +49,34 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user.perfil
 
 
+# ------------------------------
+# DETALLE DE USUARIO
+# ------------------------------
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+# ------------------------------
+# SUMAR XP
+# ------------------------------
+class AddXPView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = XPUpdateSerializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            {
+                "message": "XP actualizada correctamente.",
+                "level": user.level,
+                "xp": user.xp,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 # ------------------------------
 # AUTENTICACIÓN CON GOOGLE
@@ -72,6 +101,8 @@ class GoogleAuthView(APIView):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "role": user.role,
+                "level": user.level,
+                "xp": user.xp,
             },
             status=status.HTTP_200_OK,
         )
