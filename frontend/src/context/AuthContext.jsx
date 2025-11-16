@@ -1,106 +1,99 @@
-import { createContext, useState, useEffect } from 'react';
-import api from '../api';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from '../api/axios';
 import toast from 'react-hot-toast';
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth debe usarse dentro de un AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
     const token = localStorage.getItem('access_token');
     if (token) {
-      try {
-        const response = await api.get('/auth/profile/');
-        setUser(response.data);
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        setUser(null);
-      }
+      fetchProfile();
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await axios.get('/auth/profile/');
+      setUser(response.data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post('/auth/login/', {
+        email,
+        password,
+      });
+
+      const { access, refresh, ...userData } = response.data;
+      
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
+      
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al iniciar sesión');
+    }
+  };
+
+  const googleLogin = async (credential) => {
+    try {
+      const response = await axios.post('/auth/google/', {
+        access_token: credential
+      });
+
+      const { access, refresh, ...userData } = response.data;
+      
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
+      
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Error al iniciar sesión con Google');
+    }
   };
 
   const register = async (userData) => {
     try {
-      const response = await api.post('/auth/register/', userData);
+      const response = await axios.post('/auth/register/', userData);
       
-      if (response.data.access && response.data.refresh) {
-        localStorage.setItem('access_token', response.data.access);
-        localStorage.setItem('refresh_token', response.data.refresh);
-        await checkAuth();
-        toast.success('Registro exitoso');
-        return { success: true };
-      } else {
-        toast.success('Registro exitoso. Por favor, inicia sesión.');
-        return { success: true, needsLogin: true };
-      }
-    } catch (error) {
-      console.error('Registration error:', error);
-      const errorMsg = error.response?.data?.email?.[0] || 
-                       error.response?.data?.password1?.[0] ||
-                       error.response?.data?.non_field_errors?.[0] ||
-                       'Error en el registro';
-      toast.error(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  };
-
-  const login = async (credentials) => {
-    try {
-      const response = await api.post('/auth/login/', credentials);
-      
-      if (response.data.access && response.data.refresh) {
-        localStorage.setItem('access_token', response.data.access);
-        localStorage.setItem('refresh_token', response.data.refresh);
-        await checkAuth();
-        toast.success('Inicio de sesión exitoso');
-        return { success: true };
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      const errorMsg = error.response?.data?.non_field_errors?.[0] ||
-                       error.response?.data?.detail ||
-                       'Credenciales incorrectas';
-      toast.error(errorMsg);
-      return { success: false, error: errorMsg };
-    }
-  };
-
-  const loginWithGoogle = async (accessToken) => {
-    try {
-      console.log('Attempting Google login with token:', accessToken);
-      
-      // El backend de Django espera el token en el campo "access_token"
-      const response = await api.post('/auth/google/', {
-        access_token: accessToken,
+      // Auto-login después del registro
+      const loginResponse = await axios.post('/auth/login/', {
+        email: userData.email,
+        password: userData.password1
       });
+
+      const { access, refresh, ...userDataFromLogin } = loginResponse.data;
       
-      console.log('Google login response:', response.data);
+      localStorage.setItem('access_token', access);
+      localStorage.setItem('refresh_token', refresh);
       
-      if (response.data.access && response.data.refresh) {
-        localStorage.setItem('access_token', response.data.access);
-        localStorage.setItem('refresh_token', response.data.refresh);
-        await checkAuth();
-        toast.success('Inicio de sesión con Google exitoso');
-        return { success: true };
-      }
+      setUser(userDataFromLogin);
+      return userDataFromLogin;
     } catch (error) {
-      console.error('Google login error:', error);
-      console.error('Error response:', error.response?.data);
-      
-      const errorMsg = error.response?.data?.non_field_errors?.[0] ||
-                       error.response?.data?.detail ||
-                       'Error al iniciar sesión con Google';
-      toast.error(errorMsg);
-      return { success: false, error: errorMsg };
+      throw new Error(error.response?.data?.message || 'Error al registrar usuario');
     }
   };
 
@@ -108,35 +101,53 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     setUser(null);
-    toast.success('Sesión cerrada');
+    toast.success('¡Hasta pronto!');
   };
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await api.patch('/auth/profile/', profileData);
-      setUser(response.data);
-      toast.success('Perfil actualizado');
-      return { success: true };
+      const response = await axios.patch('/auth/profile/', profileData);
+      setUser(prev => ({ ...prev, ...response.data }));
+      toast.success('Perfil actualizado correctamente');
+      return response.data;
     } catch (error) {
-      console.error('Profile update error:', error);
       toast.error('Error al actualizar el perfil');
-      return { success: false };
+      throw error;
     }
   };
 
+  const addXP = async (xpAmount) => {
+    try {
+      const response = await axios.post('/auth/add-xp/', { xp_amount: xpAmount });
+      setUser(prev => ({
+        ...prev,
+        xp: response.data.xp,
+        level: response.data.level,
+      }));
+      toast.success(`¡Ganaste ${xpAmount} XP!`);
+      return response.data;
+    } catch (error) {
+      toast.error('Error al agregar XP');
+      throw error;
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    login,
+    googleLogin,
+    register,
+    logout,
+    updateProfile,
+    addXP,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        register,
-        login,
-        loginWithGoogle,
-        logout,
-        updateProfile,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

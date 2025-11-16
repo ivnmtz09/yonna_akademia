@@ -44,7 +44,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"],
             username=f'{validated_data["first_name"]} {validated_data["last_name"]}',
-            role="student",
+            role="user",  # Nuevo rol por defecto
         )
         user.set_password(validated_data["password1"])
         user.save()
@@ -114,3 +114,18 @@ class XPUpdateSerializer(serializers.Serializer):
         xp_amount = self.validated_data["xp_amount"]
         user.add_xp(xp_amount)
         return user
+
+
+# ------------------------------
+# SERIALIZER PARA ACTUALIZAR ROL (solo admin)
+# ------------------------------
+class UserRoleUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["role"]
+        
+    def validate_role(self, value):
+        valid_roles = ["admin", "moderator", "user"]
+        if value not in valid_roles:
+            raise serializers.ValidationError(f"Rol inválido. Debe ser uno de: {', '.join(valid_roles)}")
+        return value

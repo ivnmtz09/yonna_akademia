@@ -1,51 +1,207 @@
-/* src/styles/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import 'tailwindcss';
 
-@import "tailwindcss";
-
-/* Configuración de tema en Tailwind v4 */
-@theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
-  
-  --color-yonna-orange: #ff914d;
-  --color-yonna-orange-dark: #ff7a2e;
-  --color-yonna-green: #00b894;
+:root {
+  --primary-green: #60AB90;
+  --primary-orange: #FF8025;
+  --dark-green: #2D6B53;
+  --light-green: #E8F5F0;
+  --dark-gray: #1F2937;
+  --medium-gray: #6B7280;
+  --light-gray: #F9FAFB;
 }
 
-/* Estilos globales */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html,
 body {
-  height: 100%;
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: 'Inter', sans-serif;
+  background-color: white;
+  color: var(--dark-gray);
+  line-height: 1.6;
+  overflow-x: hidden;
 }
 
-#root {
-  min-height: 100vh;
-  height: 100%;
+/* Patrón cultural Wayuu mejorado */
+.wayuu-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 30c16.569 0 30-13.431 30-30 0 16.569 13.431 30 30 30-16.569 0-30 13.431-30 30 0-16.569-13.431-30-30-30zm0 60c16.569 0 30-13.431 30-30 0 16.569 13.431 30 30 30-16.569 0-30 13.431-30 30 0-16.569-13.431-30-30-30z' fill='%2360AB90' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
 }
 
-/* Scrollbar personalizado */
-::-webkit-scrollbar {
-  width: 8px;
+@media (max-width: 640px) {
+  .wayuu-pattern {
+    background-size: 60px 60px;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+/* Animaciones mejoradas */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-yonna-orange);
-  border-radius: 4px;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-yonna-orange-dark);
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 15px rgba(255, 128, 37, 0.3); 
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(255, 128, 37, 0.6); 
+  }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.6s ease-out;
+}
+
+.pulse-glow {
+  animation: pulse-glow 3s infinite;
+}
+
+/* Gradientes personalizados */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, var(--primary-orange) 0%, #E65C00 100%);
+}
+
+.gradient-hero {
+  background: linear-gradient(135deg, var(--light-green) 0%, #FFFFFF 50%, var(--light-green) 100%);
+}
+
+/* Botones responsivos */
+.btn-primary {
+  @apply bg-gradient-to-r from-[#FF8025] to-[#E65C00] hover:from-[#E65C00] hover:to-[#CC4A00] text-white font-semibold py-2 px-4 sm:py-3 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-gradient-to-r from-[#60AB90] to-[#2D6B53] hover:from-[#2D6B53] hover:to-[#1E4E3A] text-white font-semibold py-2 px-4 sm:py-3 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl;
+}
+
+.btn-outline {
+  @apply border border-[#60AB90] text-[#60AB90] hover:bg-[#60AB90] hover:text-white font-semibold py-2 px-4 sm:py-3 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300;
+}
+
+/* Tarjetas responsivas */
+.card-hover {
+  @apply transition-all duration-300 transform hover:scale-102 hover:shadow-xl;
+}
+
+@media (max-width: 640px) {
+  .card-hover {
+    @apply hover:scale-100;
+  }
+}
+
+/* Texto responsivo */
+.responsive-text {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+}
+
+.responsive-subtext {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Mejoras de accesibilidad */
+.focus-ring:focus {
+  outline: 2px solid var(--primary-orange);
+  outline-offset: 2px;
+}
+
+/* Loading spinner responsivo */
+.loading-spinner {
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid var(--primary-orange);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@media (min-width: 640px) {
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utilidades para móvil */
+@media (max-width: 640px) {
+  .mobile-padding {
+    @apply px-4;
+  }
+  
+  .mobile-text-center {
+    @apply text-center;
+  }
+  
+  .mobile-stack {
+    @apply flex flex-col space-y-4;
+  }
+}
+
+
+/* Mejoras de rendimiento para móviles */
+@media (max-width: 768px) {
+  .reduce-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Soporte para dispositivos con pantalla táctil */
+@media (hover: none) and (pointer: coarse) {
+  .hover-effect {
+    @apply transform-none;
+  }
+  
+  .card-hover {
+    @apply hover:scale-100 hover:shadow-lg;
+  }
 }

@@ -1,39 +1,53 @@
-const Input = ({ 
-  label, 
-  type = 'text', 
-  name, 
-  value, 
-  onChange, 
-  placeholder,
+import React from 'react';
+import { clsx } from 'clsx';
+
+const Input = React.forwardRef(({
+  label,
   error,
-  required = false 
-}) => {
+  helperText,
+  className = '',
+  variant = 'default',
+  ...props
+}, ref) => {
+  const baseClasses = 'w-full px-4 py-3 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2';
+  
+  const variants = {
+    default: 'border-gray-300 focus:border-orange-500 focus:ring-orange-200 bg-white',
+    error: 'border-red-500 focus:border-red-500 focus:ring-red-200 bg-white',
+    success: 'border-green-500 focus:border-green-500 focus:ring-green-200 bg-white',
+  };
+  
+  const inputClasses = clsx(
+    baseClasses,
+    variants[error ? 'error' : variant],
+    className
+  );
+
   return (
-    <div className="mb-4">
+    <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 transition-all ${
-          error 
-            ? 'border-red-500 focus:border-red-500 focus:ring-red-200' 
-            : 'border-gray-300 focus:border-[#ff914d] focus:ring-[#ff914d]/20'
-        }`}
+        ref={ref}
+        className={inputClasses}
+        {...props}
       />
-      {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
+      {(error || helperText) && (
+        <p className={clsx(
+          "mt-1 text-sm",
+          error ? "text-red-600" : "text-gray-500"
+        )}>
+          {error || helperText}
+        </p>
       )}
     </div>
   );
-};
+});
+
+Input.displayName = 'Input';
 
 export default Input;

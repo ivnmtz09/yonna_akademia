@@ -20,6 +20,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
+        extra_fields.setdefault("role", "admin")
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("El superusuario debe tener is_staff=True.")
@@ -33,13 +34,14 @@ class User(AbstractUser):
     username = models.CharField(_("nombre de usuario"), max_length=150, unique=False, blank=True, null=True)
     email = models.EmailField(_("correo electrónico"), unique=True)
 
+    # Nuevos roles simplificados
     ROLE_CHOICES = (
         ("admin", "Administrador"),
-        ("teacher", "Sabedor/Docente"),
-        ("student", "Estudiante"),
+        ("moderator", "Moderador"),
+        ("user", "Usuario"),
     )
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="user")
     bio = models.TextField("biografía corta", blank=True, null=True)
 
     # Sistema de niveles con XP
@@ -69,7 +71,6 @@ class User(AbstractUser):
         from apps.users.signals import xp_gained_signal
         xp_gained_signal.send(sender=self.__class__, user=self, amount=amount, source=source)
 
-
     def _update_level(self):
         thresholds = [0, 100, 250, 500, 1000, 2000, 4000, 8000]
         new_level = 1
@@ -79,6 +80,20 @@ class User(AbstractUser):
         if self.level != new_level:
             self.level = new_level
             self.save(update_fields=["level"])
+
+    # Propiedades de conveniencia para verificar roles
+    @property
+    def is_admin(self):
+        return self.role == "admin"
+
+    @property
+    def is_moderator(self):
+        return self.role == "moderator"
+
+    @property
+    def is_regular_user(self):
+        return self.role == "user"
+
 
 class Profile(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name="perfil")

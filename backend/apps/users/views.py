@@ -8,9 +8,11 @@ from .serializers import (
     ProfileSerializer,
     LoginSerializer,
     XPUpdateSerializer,
+    UserRoleUpdateSerializer,
 )
 from .models import Profile
 from .google_auth import google_authenticate
+from .permissions import IsAdmin, IsAdminOrModerator
 
 User = get_user_model()
 
@@ -56,6 +58,24 @@ class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+# ------------------------------
+# LISTA DE USUARIOS (solo admin/moderator)
+# ------------------------------
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminOrModerator]
+
+
+# ------------------------------
+# ACTUALIZAR ROL DE USUARIO (solo admin)
+# ------------------------------
+class UserRoleUpdateView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserRoleUpdateSerializer
+    permission_classes = [IsAdmin]
 
 
 # ------------------------------

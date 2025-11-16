@@ -34,7 +34,7 @@ def google_authenticate(id_token_str):
             "first_name": first_name,
             "last_name": last_name,
             "username": f"{first_name} {last_name}".strip(),
-            "role": "student",
+            "role": "user",  # Nuevo rol por defecto
             "is_active": True,
         },
     )
