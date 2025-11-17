@@ -68,19 +68,45 @@ class CreateQuizSerializer(serializers.ModelSerializer):
         model = Quiz
         fields = [
             "title", "description", "course", "difficulty", "passing_score",
-            "xp_reward", "time_limit", "max_attempts", "questions"
+            "xp_reward", "time_limit", "max_attempts", "is_active", "questions"
         ]
+
+    def validate(self, attrs):
+        """Validaciones adicionales"""
+        # Validar que el curso existe
+        course = attrs.get('course')
+        if course and not course.is_active:
+            raise serializers.ValidationError("No puedes crear quizzes en cursos inactivos.")
+        
+        # Validar preguntas si se proporcionan
+        questions = attrs.get('questions', [])
+        if questions:
+            for idx, question in enumerate(questions):
+                # Validar que las preguntas de opción múltiple tengan opciones
+                if question.get('question_type') == 'multiple_choice':
+                    options = question.get('options', [])
+                    if len(options) < 2:
+                        raise serializers.ValidationError(
+                            f"La pregunta {idx + 1} debe tener al menos 2 opciones."
+                        )
+        
+        return attrs
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions', [])
+        
+        # Crear el quiz
         quiz = Quiz.objects.create(**validated_data)
         
-        # Crear preguntas si se proporcionan
-        for question_data in questions_data:
-            Question.objects.create(quiz=quiz, **question_data)
-            
+        # Crear preguntas asociadas
+        for idx, question_data in enumerate(questions_data):
+            Question.objects.create(
+                quiz=quiz,
+                order=question_data.get('order', idx),
+                **question_data
+            )
+        
         return quiz
-
 
 class QuizAttemptSerializer(serializers.ModelSerializer):
     quiz_title = serializers.CharField(source="quiz.title", read_only=True)

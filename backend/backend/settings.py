@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "corsheaders",
     "channels",
+    'rest_framework_simplejwt.token_blacklist',
 
     # Apps del proyecto
     "apps.users",

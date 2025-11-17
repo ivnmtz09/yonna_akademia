@@ -1,6 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
-from django.db.models import Sum, Count, Avg, Q
+from django.db.models import Sum, Count, Avg, Q, Max
 from rest_framework import views, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -17,6 +17,8 @@ from .serializers import (
 )
 from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator
 from apps.users.models import User
+from apps.courses.models import Course
+from apps.quizzes.models import Quiz
 from apps.quizzes.models import QuizAttempt
 from apps.progress.models import Progress, GlobalProgress
 
@@ -312,7 +314,6 @@ class TimeSeriesStatsView(views.APIView):
         serializer = TimeSeriesStatSerializer(data, many=True)
         return Response(serializer.data)
 
-
 class AdminStatisticsView(views.APIView):
     """
     Estadísticas de administración para la plataforma.
@@ -320,85 +321,123 @@ class AdminStatisticsView(views.APIView):
     permission_classes = [IsAdminOrModerator]
 
     def get(self, request):
-        timeframe = request.GET.get('timeframe', 'today')  # today, week, month
-        
-        now = timezone.now()
-        if timeframe == 'week':
-            start_date = now - timedelta(days=7)
-        elif timeframe == 'month':
-            start_date = now - timedelta(days=30)
-        else:
-            start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        try:
+            timeframe = request.GET.get('timeframe', 'today')  # today, week, month
+            
+            now = timezone.now()
+            if timeframe == 'week':
+                start_date = now - timedelta(days=7)
+            elif timeframe == 'month':
+                start_date = now - timedelta(days=30)
+            else:
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Actualizar estadísticas de hoy
-        PlatformStatistic.update_daily_statistics()
-        
-        # Obtener estadísticas de hoy
-        today_stats = PlatformStatistic.objects.filter(date=now.date()).first()
-        
-        # Métricas adicionales
-        total_users = User.objects.filter(is_active=True, role='user').count()
-        total_courses_completed = Progress.objects.filter(course_completed=True).count()
-        total_xp_platform = XpHistory.objects.aggregate(total=Sum('xp_gained'))['total'] or 0
-        
-        # Usuarios activos en el período
-        active_users = User.objects.filter(
-            models.Q(quiz_attempts__completed_at__gte=start_date) |
-            models.Q(xp_history__created_at__gte=start_date),
-            is_active=True,
-            role='user'
-        ).distinct().count()
+            # Estadísticas básicas
+            total_users = User.objects.filter(is_active=True, role='user').count()
+            total_courses = Course.objects.filter(is_active=True).count()
+            total_quizzes = Quiz.objects.filter(is_active=True).count()
+            
+            # Actividad reciente
+            active_users = User.objects.filter(
+                Q(quiz_attempts__completed_at__gte=start_date) |
+                Q(xp_history__created_at__gte=start_date),
+                is_active=True,
+                role='user'
+            ).distinct().count()
+            
+            # XP y completaciones
+            total_xp_platform = XpHistory.objects.aggregate(
+                total=Sum('xp_gained')
+            )['total'] or 0
+            
+            total_courses_completed = Progress.objects.filter(
+                course_completed=True
+            ).count()
+            
+            # Quizzes tomados en el período
+            quizzes_taken = QuizAttempt.objects.filter(
+                completed_at__gte=start_date
+            ).count()
 
-        data = {
-            'timeframe': timeframe,
-            'period_start': start_date,
-            'total_users': total_users,
-            'active_users': active_users,
-            'total_courses_completed': total_courses_completed,
-            'total_xp_platform': total_xp_platform,
-            'daily_stats': PlatformStatisticSerializer(today_stats).data if today_stats else None,
-            'top_users': self._get_top_users(10),
-            'popular_courses': self._get_popular_courses(5),
-        }
+            # Top usuarios
+            top_users = self._get_top_users(10)
+            
+            # Cursos populares
+            popular_courses = self._get_popular_courses(5)
+
+            data = {
+                'timeframe': timeframe,
+                'period_start': start_date.isoformat(),
+                'total_users': total_users,
+                'active_users': active_users,
+                'total_courses': total_courses,
+                'total_quizzes': total_quizzes,
+                'total_courses_completed': total_courses_completed,
+                'total_xp_platform': total_xp_platform,
+                'quizzes_taken_period': quizzes_taken,
+                'top_users': top_users,
+                'popular_courses': popular_courses,
+            }
+            
+            return Response(data, status=status.HTTP_200_OK)
         
-        return Response(data)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error en AdminStatisticsView: {str(e)}", exc_info=True)
+            
+            return Response(
+                {"error": "Error al obtener estadísticas."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def _get_top_users(self, limit):
         """Obtiene los usuarios top por XP."""
-        users = User.objects.filter(
-            is_active=True, 
-            role='user'
-        ).order_by('-xp', '-level')[:limit]
-        
-        return [
-            {
-                'id': user.id,
-                'name': user.get_full_name() or user.email,
-                'level': user.level,
-                'xp': user.xp,
-                'courses_completed': Progress.objects.filter(user=user, course_completed=True).count()
-            }
-            for user in users
-        ]
+        try:
+            users = User.objects.filter(
+                is_active=True, 
+                role='user'
+            ).order_by('-xp', '-level')[:limit]
+            
+            return [
+                {
+                    'id': user.id,
+                    'name': user.get_full_name() or user.email,
+                    'level': user.level,
+                    'xp': user.xp,
+                    'courses_completed': Progress.objects.filter(
+                        user=user, 
+                        course_completed=True
+                    ).count()
+                }
+                for user in users
+            ]
+        except Exception:
+            return []
     
     def _get_popular_courses(self, limit):
         """Obtiene los cursos más populares."""
-        from apps.courses.models import Course
-        
-        courses = Course.objects.filter(is_active=True).annotate(
-            enrollment_count=Count('enrollments'),
-            completion_count=Count('enrollments', filter=Q(enrollments__course_completed=True)),
-            avg_progress=Avg('progress_records__percentage')
-        ).order_by('-enrollment_count')[:limit]
-        
-        return [
-            {
-                'id': course.id,
-                'title': course.title,
-                'enrollment_count': course.enrollment_count,
-                'completion_count': course.completion_count,
-                'completion_rate': (course.completion_count / course.enrollment_count * 100) if course.enrollment_count > 0 else 0,
-                'average_progress': course.avg_progress or 0
-            }
-            for course in courses
-        ]
+        try:
+            courses = Course.objects.filter(is_active=True).annotate(
+                enrollment_count=Count('enrollments'),
+                completion_count=Count('enrollments', filter=Q(enrollments__course_completed=True)),
+                avg_progress=Avg('progress_records__percentage')
+            ).order_by('-enrollment_count')[:limit]
+            
+            return [
+                {
+                    'id': course.id,
+                    'title': course.title,
+                    'enrollment_count': course.enrollment_count,
+                    'completion_count': course.completion_count,
+                    'completion_rate': round(
+                        (course.completion_count / course.enrollment_count * 100) 
+                        if course.enrollment_count > 0 else 0, 
+                        2
+                    ),
+                    'average_progress': round(course.avg_progress or 0, 2)
+                }
+                for course in courses
+            ]
+        except Exception:
+            return []

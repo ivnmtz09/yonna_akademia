@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.db.models import Avg, Count, Sum, Max
 from apps.courses.models import Course, Enrollment
 from apps.quizzes.models import QuizAttempt
 

@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, F
 from django.shortcuts import get_object_or_404
 
 from .models import Quiz, Question, QuizAttempt
@@ -13,7 +13,6 @@ from .serializers import (
     QuizStatisticsSerializer,
 )
 from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator
-
 
 class AvailableQuizzesView(generics.ListAPIView):
     """Lista los quizzes disponibles para el usuario."""
@@ -57,8 +56,40 @@ class CreateQuizView(generics.CreateAPIView):
     serializer_class = CreateQuizSerializer
     permission_classes = [IsAdminOrModerator]
 
-    def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            
+            # Guardar el quiz con el usuario que lo creó
+            quiz = serializer.save(created_by=request.user)
+            
+            # Responder con el quiz completo incluyendo preguntas
+            response_serializer = QuizSerializer(quiz, context={'request': request})
+            
+            return Response(
+                {
+                    "message": "Quiz creado exitosamente",
+                    "quiz": response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        
+        except ValidationError as e:
+            return Response(
+                {"error": "Datos inválidos", "detail": e.detail},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error en CreateQuizView: {str(e)}", exc_info=True)
+            
+            return Response(
+                {"error": "Error al crear el quiz. Verifica los datos enviados."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class UpdateQuizView(generics.UpdateAPIView):

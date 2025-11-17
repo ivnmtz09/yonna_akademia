@@ -8,6 +8,7 @@ from .views import (
     AddXPView,
     UserListView,
     UserRoleUpdateView,
+    logout_view,
 )
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
@@ -15,6 +16,7 @@ urlpatterns = [
     # Autenticación básica
     path("register/", RegisterView.as_view(), name="register"),
     path("login/", LoginView.as_view(), name="login"),
+    path("logout/", logout_view, name="logout"),
     
     # Perfil y usuario actual
     path("profile/", ProfileView.as_view(), name="profile"),
