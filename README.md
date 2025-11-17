@@ -1,170 +1,245 @@
-# Yonna Akademia
+🎓 Yonna Akademia
 
-## Descripción General
+📖 Descripción General
 
-Yonna Akademia es una plataforma educativa gamificada para el aprendizaje del idioma Wayuunaiki desde el español. Inspirada en el modelo de Duolingo, combina lecciones, retos y progresión por niveles. 
+Yonna Akademia es una plataforma educativa gamificada para el aprendizaje del idioma Wayuunaiki desde el español. Inspirada en el modelo de Duolingo, combina lecciones interactivas, retos y progresión por niveles para hacer el aprendizaje del wayuunaiki accesible y engaging.
 
 La plataforma está construida con:
-- **Backend**: Django + Django REST Framework
-- **Frontend**: React + Vite + TailwindCSS
 
----
+Backend: Django + Django REST Framework
 
-## Estructura del Proyecto
+Frontend: React + Vite + TailwindCSS
 
-```
-yonna_akademia/
-├── backend/
-│   ├── apps/
-│   │   ├── users/              # Usuarios, perfiles y autenticación
-│   │   ├── courses/            # Cursos y niveles
-│   │   ├── quizzes/           # Juicios interactivos (Quizzes)
-│   │   ├── progress/          # Progreso, XP, niveles y logros
-│   │   ├── notifications/     # Sistema de notificaciones
-│   │   ├── stats/             # Estadísticas y métricas
-│   │   ├── reports/           # Reportes y análisis
-│   │   ├── media_content/     # Archivos multimedia
-│   │   └── core/             # Configuraciones base y endpoints generales
-│   ├── backend/
-│   │   ├── settings.py
-│   │   ├── urls.py
-│   │   └── asgi.py / wsgi.py
-│   ├── manage.py
-│   └── requirements.txt
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/       # Componentes reutilizables
-│   │   ├── pages/           # Páginas principales
-│   │   ├── context/         # Contextos de React (Auth, etc.)
-│   │   ├── api/            # Configuración y servicios de API
-│   │   └── assets/         # Recursos estáticos
-│   ├── package.json
-│   └── vite.config.js
-```
+Base de datos: PostgreSQL
 
----
+🏗️ Arquitectura del Backend
 
-## Requisitos del Sistema
+Estructura de Aplicaciones Django
 
-### Backend
-* Python 3.11+
-* PostgreSQL 13+
-* pip / virtualenv
+El backend está organizado en aplicaciones modulares con responsabilidades específicas:
 
-### Frontend
-* Node.js 18+
-* npm o yarn
+backend/
+├── apps/
+│ ├── users/         # Gestión de usuarios, perfiles y autenticación
+│ │   - Registro y login de usuarios
+│ │   - Perfiles de estudiante
+│ │   - Autenticación JWT y OAuth con Google
+│ │   - Gestión de roles y permisos
+│ │
+│ ├── courses/       # Cursos, lecciones y contenido educativo
+│ │   - Estructura de cursos y niveles
+│ │   - Lecciones de vocabulario y gramática
+│ │   - Contenido multimedia asociado
+│ │   - Secuenciación de aprendizaje
+│ │
+│ ├── quizzes/       # Sistema de evaluaciones interactivas
+│ │   - Juicios (quizzes) por lección
+│ │   - Preguntas múltiple opción
+│ │   - Ejercicios de emparejamiento
+│ │   - Evaluaciones de pronunciación
+│ │
+│ ├── progress/      # Seguimiento del progreso del usuario
+│ │   - Sistema de XP (puntos de experiencia)
+│ │   - Niveles y logros desbloqueables
+│ │   - Streaks y estadísticas de consistencia
+│ │   - Mecánicas de gamificación
+│ │
+│ ├── notifications/ # Sistema de notificaciones
+│ │   - Recordatorios de práctica
+│ │   - Logros desbloqueados
+│ │   - Notificaciones push y en-app
+│ │
+│ ├── stats/         # Analytics y métricas
+│ │   - Estadísticas de aprendizaje
+│ │   - Progreso general y por habilidad
+│ │   - Métricas de engagement
+│ │
+│ ├── media_content/ # Gestión de archivos multimedia
+│ │   - Imágenes para lecciones
+│ │   - Archivos de audio para pronunciación
+│ │   - Videos educativos
+│ │   - Optimización y almacenamiento
+│ │
+│ └── core/          # Configuración base y utilities
+│     - Settings compartidos
+│     - Middlewares personalizados
+│     - Utilities comunes
+│     - Endpoints generales
 
----
 
-## Configuración Inicial
+✨ Características Principales
 
-1. Clona el repositorio:
-```bash
-git clone https://github.com/ivnmtz09/yonna_akademia.git
-cd yonna_akademia
-```
+🎯 Aprendizaje Gamificado
 
-### Configuración Backend
+Sistema de niveles y XP
 
-1. Crea y activa el entorno virtual:
-```bash
-cd backend
+Logros y recompensas desbloqueables
+
+Streaks para mantener la consistencia
+
+Leaderboards competitivos
+
+📚 Contenido Estructurado
+
+Cursos organizados por dificultad
+
+Lecciones progresivas de wayuunaiki
+
+Enfoque en vocabulario práctico y gramática
+
+Contenido cultural wayuu integrado
+
+🎮 Evaluaciones Interactivas
+
+Quizzes adaptativos
+
+Ejercicios de listening y speaking
+
+Retroalimentación inmediata
+
+Mecánicas de repetición espaciada
+
+🛠️ Requisitos del Sistema
+
+Backend
+
+Python 3.11+
+
+PostgreSQL 13+
+
+Django 4.2+
+
+Django REST Framework
+
+Frontend
+
+Node.js 18+
+
+React 18+
+
+Vite
+
+TailwindCSS
+
+🚀 Configuración Inicial
+
+Backend Setup
+
+Clonar y configurar entorno:
+
+git clone [https://github.com/ivnmtz09/yonna_akademia.git](https://github.com/ivnmtz09/yonna_akademia.git)
+cd yonna_akademia/backend
+
+# Crear entorno virtual
 python -m venv venv
 
-# En Windows:
+# Activar (Windows)
 venv\Scripts\activate
 
-# En Linux/Mac:
+# Activar (Linux/Mac)
 source venv/bin/activate
-```
 
-2. Instala las dependencias:
-```bash
+
+Instalar dependencias:
+
 pip install -r requirements.txt
-```
 
-3. Crea un archivo `.env` en la raíz del proyecto (`yonna_akademia/.env`) con las siguientes variables:
 
-```properties
+Configurar variables de entorno (.env):
+
 # Django
-DEBUG=                    # true/false
-SECRET_KEY=              # Clave secreta de Django
+DEBUG=true
+SECRET_KEY=tu-clave-secreta-aqui
 
-# Base de datos
-DB_NAME=                 # Nombre de la base de datos
-DB_USER=                 # Usuario de PostgreSQL
-DB_PASSWORD=             # Contraseña de PostgreSQL
-DB_HOST=                 # Host de la base de datos
-DB_PORT=                 # Puerto de PostgreSQL (default: 5432)
+# Database
+DB_NAME=yonna_akademia
+DB_USER=postgres
+DB_PASSWORD=tu-password
+DB_HOST=localhost
+DB_PORT=5432
 
-# OAuth Google
-GOOGLE_CLIENT_ID=        # ID de cliente de Google OAuth
-GOOGLE_CLIENT_SECRET=    # Secreto de cliente de Google OAuth
-```
+# Google OAuth
+GOOGLE_CLIENT_ID=tu-client-id
+GOOGLE_CLIENT_SECRET=tu-client-secret
 
-4. Crea la base de datos en PostgreSQL:
-```sql
-CREATE DATABASE nombre_db;
-```
 
-5. Ejecuta las migraciones:
-```bash
+Configurar base de datos y migraciones:
+
 python manage.py makemigrations
 python manage.py migrate
-```
-
-6. Crea un superusuario:
-```bash
 python manage.py createsuperuser
-```
 
-### Configuración Frontend
 
-1. Instala las dependencias:
-```bash
+Ejecutar servidor de desarrollo:
+
+python manage.py runserver
+
+
+Backend disponible en: http://localhost:8000
+
+Frontend Setup
+
+Navegar a la carpeta e instalar:
+
 cd frontend
 npm install
-```
 
-## Iniciar los Servidores
 
-### Backend
-```bash
-cd backend
-python manage.py runserver
-```
-El servidor estará disponible en http://localhost:8000
+Ejecutar servidor de desarrollo:
 
-### Frontend
-```bash
-cd frontend
 npm run dev
-```
-La aplicación estará disponible en http://localhost:5173
 
----
 
-## Documentación Adicional
+Frontend disponible en: http://localhost:5173
 
-- La documentación de la API está disponible en `/api/docs/` una vez que el servidor backend esté corriendo
-- Los endpoints protegidos requieren autenticación JWT
-- La autenticación con Google requiere configurar las credenciales en la consola de Google Cloud Platform
+📡 API Endpoints Principales
 
----
+GET /api/courses/ - Lista de cursos disponibles
 
-## Contribuir
+GET /api/courses/{id}/lessons/ - Lecciones por curso
 
-1. Haz fork del repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Haz commit de tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+POST /api/quizzes/{id}/submit/ - Envío de respuestas
 
----
+GET /api/progress/stats/ - Estadísticas de progreso
 
-**Autor:** Ivan Martinez  
-**Universidad de La Guajira - Ingeniería de Sistemas**
+GET /api/users/profile/ - Perfil de usuario
 
-Proyecto bajo desarrollo educativo Yonna Akademia.
+🤝 Desarrollo y Contribución
+
+Estructura de ramas:
+
+main - Versión estable en producción
+
+develop - Desarrollo activo
+
+feature/nombre-feature - Nuevas características
+
+hotfix/nombre-fix - Correcciones críticas
+
+Proceso de contribución:
+
+Fork del repositorio
+
+Crear rama feature: git checkout -b feature/nueva-caracteristica
+
+Commit changes: git commit -m 'feat: añadir nueva característica'
+
+Push: git push origin feature/nueva-caracteristica
+
+Abrir un Pull Request
+
+📄 Documentación Adicional
+
+API Documentation: Disponible en /api/docs/ (Swagger)
+
+Autenticación: JWT tokens + OAuth2 con Google
+
+Base de datos: Diagrama ER disponible en /docs/database/
+
+Desarrollado por: Ivan Martinez
+
+Universidad de La Guajira - Ingeniería de Sistemas
+
+Proyecto de preservación lingüística y cultural Wayuu
+
+Yonna Akademia - Aprendiendo Wayuunaiki, preservando cultura
