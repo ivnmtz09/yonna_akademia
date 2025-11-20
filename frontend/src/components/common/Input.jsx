@@ -1,47 +1,48 @@
-import React from 'react';
-import { clsx } from 'clsx';
+import React, { forwardRef } from 'react';
+import { AlertCircle } from 'lucide-react';
 
-const Input = React.forwardRef(({
-  label,
-  error,
-  helperText,
-  className = '',
-  variant = 'default',
-  ...props
-}, ref) => {
-  const baseClasses = 'w-full px-4 py-3 rounded-lg border transition-all duration-300 focus:outline-none focus:ring-2';
-  
-  const variants = {
-    default: 'border-gray-300 focus:border-orange-500 focus:ring-orange-200 bg-white',
-    error: 'border-red-500 focus:border-red-500 focus:ring-red-200 bg-white',
-    success: 'border-green-500 focus:border-green-500 focus:ring-green-200 bg-white',
-  };
-  
-  const inputClasses = clsx(
-    baseClasses,
-    variants[error ? 'error' : variant],
-    className
-  );
-
+const Input = forwardRef(({ label, error, className = '', icon: Icon, ...props }, ref) => {
   return (
-    <div className="w-full">
+    <div className={`w-full ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">
           {label}
-          {props.required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
-      <input
-        ref={ref}
-        className={inputClasses}
-        {...props}
-      />
-      {(error || helperText) && (
-        <p className={clsx(
-          "mt-1 text-sm",
-          error ? "text-red-600" : "text-gray-500"
-        )}>
-          {error || helperText}
+      
+      <div className="relative">
+        {Icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+            <Icon size={18} />
+          </div>
+        )}
+        
+        <input
+          ref={ref}
+          className={`
+            w-full bg-white border text-slate-900 text-sm rounded-xl px-4 py-3
+            transition-all duration-200 outline-none
+            placeholder:text-slate-400
+            ${Icon ? 'pl-10' : ''}
+            ${error 
+              ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' 
+              : 'border-slate-200 hover:border-slate-300 focus:border-brand-green focus:ring-4 focus:ring-brand-green/10'
+            }
+          `}
+          {...props}
+        />
+
+        {/* Icono de error a la derecha */}
+        {error && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none animate-in fade-in zoom-in">
+            <AlertCircle size={18} />
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <p className="mt-1.5 ml-1 text-sm text-red-500 font-medium flex items-center gap-1 animate-in slide-in-from-top-1">
+          {error}
         </p>
       )}
     </div>

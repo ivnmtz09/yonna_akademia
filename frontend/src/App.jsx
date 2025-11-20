@@ -11,13 +11,15 @@ import Header from './components/common/Header';
 
 // Pages
 import HomePage from './pages/HomePage';
+import FeedPage from './pages/FeedPage';
+import ContentDetailPage from './pages/ContentDetailPage';
+import DashboardPage from './pages/DashboardPage';
 import ProfilePage from './components/profile/ProfilePage';
 
 // Estilos
 import './styles/index.css';
 
-// Componente de rutas protegidas
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
@@ -28,17 +30,24 @@ const ProtectedRoute = ({ children }) => {
     );
   }
   
-  return user ? children : <Navigate to="/" replace />;
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+  
+  if (requiredRole && !requiredRole.includes(user.role)) {
+    return <Navigate to="/feed" replace />;
+  }
+  
+  return children;
 }
 
-// Componente de layout para páginas con header
+// Layout simplificado: El Header siempre se muestra
 const Layout = ({ children }) => {
-  const { user } = useAuth();
-  
   return (
-    <div className="min-h-screen bg-gray-50">
-      {user && <Header />}
-      <main className={user ? '' : ''}>
+    <div className="min-h-screen bg-white">
+      <Header />
+      {/* pt-20 compensa la altura del Header fijo (h-20) */}
+      <main className="pt-20">
         {children}
       </main>
     </div>
@@ -56,13 +65,12 @@ function App() {
               toastOptions={{
                 duration: 4000,
                 style: {
-                  background: '#363636',
+                  background: '#334155',
                   color: '#fff',
                 },
                 success: {
-                  duration: 3000,
                   theme: {
-                    primary: 'green',
+                    primary: '#60AB90',
                     secondary: 'black',
                   },
                 },
@@ -80,63 +88,39 @@ function App() {
                 } 
               />
               
-              {/* Rutas protegidas */}
+              {/* Feed Cultural - Pública */}
               <Route 
-                path="/courses" 
+                path="/feed" 
                 element={
-                  <ProtectedRoute>
+                  <Layout>
+                    <FeedPage />
+                  </Layout>
+                } 
+              />
+              
+              {/* Detalle de contenido - Pública */}
+              <Route 
+                path="/content/:id" 
+                element={
+                  <Layout>
+                    <ContentDetailPage />
+                  </Layout>
+                } 
+              />
+              
+              {/* Dashboard Admin */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute requiredRole={['admin', 'moderator']}>
                     <Layout>
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Cursos</h1>
-                        <p className="text-gray-600">Página de cursos en desarrollo...</p>
-                      </div>
+                      <DashboardPage />
                     </Layout>
                   </ProtectedRoute>
                 } 
               />
               
-              <Route 
-                path="/quizzes" 
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Quizzes</h1>
-                        <p className="text-gray-600">Página de quizzes en desarrollo...</p>
-                      </div>
-                    </Layout>
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/progress" 
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Progreso</h1>
-                        <p className="text-gray-600">Página de progreso en desarrollo...</p>
-                      </div>
-                    </Layout>
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/achievements" 
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <div className="container mx-auto px-4 py-8">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Logros</h1>
-                        <p className="text-gray-600">Página de logros en desarrollo...</p>
-                      </div>
-                    </Layout>
-                  </ProtectedRoute>
-                } 
-              />
-              
+              {/* Perfil */}
               <Route 
                 path="/profile" 
                 element={
@@ -148,7 +132,6 @@ function App() {
                 } 
               />
               
-              {/* Ruta por defecto */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

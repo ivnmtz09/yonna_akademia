@@ -37,45 +37,62 @@ class MediaContentViewSet(viewsets.ModelViewSet):
         return MediaContentSerializer
 
     def get_queryset(self):
-        queryset = MediaContent.objects.all()
-        user = self.request.user
+        try:
+            queryset = MediaContent.objects.all()
+            user = self.request.user
 
-        # Filtros para usuarios no autenticados o regulares
-        if not user.is_authenticated or user.role == 'user':
-            queryset = queryset.filter(is_approved=True, is_public=True)
-        # Moderadores ven su contenido y contenido pendiente de aprobación
-        elif user.role == 'moderator':
-            queryset = queryset.filter(
-                Q(is_approved=True) | 
-                Q(uploaded_by=user) |
-                Q(is_approved=False)
-            )
-        # Admins ven todo
+            # Filtros para usuarios no autenticados o regulares
+            if not user.is_authenticated or user.role == 'user':
+                queryset = queryset.filter(is_approved=True, is_public=True)
+            # Moderadores ven su contenido y contenido pendiente de aprobación
+            elif user.role == 'moderator':
+                queryset = queryset.filter(
+                    Q(is_approved=True) | 
+                    Q(uploaded_by=user) |
+                    Q(is_approved=False)
+                )
+            # Admins ven todo
 
-        # Filtros opcionales
-        media_type = self.request.query_params.get('media_type')
-        category = self.request.query_params.get('category')
-        featured = self.request.query_params.get('featured')
-        search = self.request.query_params.get('search')
+            # Filtros opcionales
+            media_type = self.request.query_params.get('media_type')
+            category = self.request.query_params.get('category')
+            featured = self.request.query_params.get('featured')
+            search = self.request.query_params.get('search')
 
-        if media_type:
-            queryset = queryset.filter(media_type=media_type)
-        if category:
-            queryset = queryset.filter(category=category)
-        if featured:
-            queryset = queryset.filter(is_featured=True)
-        if search:
-            queryset = queryset.filter(
-                Q(title__icontains=search) |
-                Q(description__icontains=search) |
-                Q(tags__icontains=search)
-            )
+            if media_type:
+                queryset = queryset.filter(media_type=media_type)
+            if category:
+                queryset = queryset.filter(category=category)
+            if featured:
+                queryset = queryset.filter(is_featured=True)
+            if search:
+                queryset = queryset.filter(
+                    Q(title__icontains=search) |
+                    Q(description__icontains=search) |
+                    Q(tags__icontains=search)
+                )
 
-        return queryset.select_related('uploaded_by', 'approved_by').prefetch_related('views')
+            return queryset.select_related('uploaded_by', 'approved_by').prefetch_related('views')
+            
+        except Exception as e:
+            print(f"Error en get_queryset: {str(e)}")
+            return MediaContent.objects.none()
 
+    # --- MEJORA DE AUTO-APROBACIÓN ---
     def perform_create(self, serializer):
-        # Asignar el usuario actual como uploader
-        serializer.save(uploaded_by=self.request.user)
+        user = self.request.user
+        
+        # Si el usuario es Admin o Moderador, auto-aprobamos el contenido
+        if user.role in ['admin', 'moderator']:
+            serializer.save(
+                uploaded_by=user,
+                is_approved=True,       # ¡Aprobado automático!
+                approved_by=user,       # Firmado por ti mismo
+                approved_at=timezone.now()
+            )
+        else:
+            # Usuarios normales requieren revisión
+            serializer.save(uploaded_by=user, is_approved=False)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdminOrModerator])
     def approve(self, request, pk=None):
@@ -112,7 +129,6 @@ class MediaContentViewSet(viewsets.ModelViewSet):
         media = self.get_object()
         duration_watched = request.data.get('duration_watched', 0)
         
-        # Crear o actualizar registro de visualización
         media_view, created = MediaView.objects.get_or_create(
             media=media,
             user=request.user,
@@ -167,7 +183,6 @@ class MediaCollectionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = MediaCollection.objects.all()
         
-        # Para usuarios no autenticados o regulares, solo colecciones públicas
         if not self.request.user.is_authenticated or self.request.user.role == 'user':
             queryset = queryset.filter(is_public=True)
         
@@ -178,7 +193,6 @@ class MediaCollectionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def add_media(self, request, pk=None):
-        """Agregar contenido a una colección."""
         collection = self.get_object()
         media_id = request.data.get('media_id')
         
@@ -200,7 +214,6 @@ class MediaCollectionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def remove_media(self, request, pk=None):
-        """Remover contenido de una colección."""
         collection = self.get_object()
         media_id = request.data.get('media_id')
         
@@ -228,31 +241,25 @@ class MediaStatisticsViewSet(viewsets.ViewSet):
     permission_classes = [IsAdminOrModerator]
 
     def list(self, request):
-        """Estadísticas generales de contenido multimedia."""
-        # Conteos básicos
         total_media = MediaContent.objects.count()
         total_views = MediaView.objects.count()
         
-        # Media por tipo
         media_by_type = MediaContent.objects.values('media_type').annotate(
             count=Count('id')
         )
         media_by_type_dict = {item['media_type']: item['count'] for item in media_by_type}
         
-        # Media por categoría
         media_by_category = MediaContent.objects.values('category').annotate(
             count=Count('id')
         )
         media_by_category_dict = {item['category']: item['count'] for item in media_by_category}
         
-        # Media más visto
         most_viewed_media = MediaContent.objects.annotate(
             view_count=Count('views')
         ).order_by('-view_count')[:10].values(
             'id', 'title', 'media_type', 'view_count'
         )
         
-        # Subidas recientes
         recent_uploads = MediaContent.objects.filter(
             uploaded_at__gte=timezone.now() - timedelta(days=7)
         ).values('id', 'title', 'media_type', 'uploaded_at')
@@ -271,8 +278,6 @@ class MediaStatisticsViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def user_engagement(self, request):
-        """Estadísticas de engagement de usuarios."""
-        # Usuarios más activos
         active_users = MediaView.objects.values(
             'user__id', 'user__email', 'user__get_full_name'
         ).annotate(
@@ -280,7 +285,6 @@ class MediaStatisticsViewSet(viewsets.ViewSet):
             total_watch_time=Sum('duration_watched')
         ).order_by('-total_views')[:10]
         
-        # Tendencias temporales
         views_by_day = MediaView.objects.filter(
             viewed_at__gte=timezone.now() - timedelta(days=30)
         ).extra({

@@ -1,180 +1,129 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
+import { Mail, Lock, Loader2, LogIn, Eye, EyeOff } from "lucide-react";
 
-import Button from '../common/Button';
-import Input from '../common/Input';
-import useAuth from '../../hooks/useAuth';
-
-const loginSchema = yup.object({
-  email: yup
-    .string()
-    .email('Ingresa un email válido')
-    .required('El email es requerido'),
-  password: yup
-    .string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres')
-    .required('La contraseña es requerida'),
-});
-
-const LoginForm = ({ onSwitchToRegister, onSuccess }) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const { login, googleLogin, loading } = useAuth();
-  
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
-    resolver: yupResolver(loginSchema),
-  });
+const LoginForm = ({ onSuccess, onSwitchToRegister }) => {
+  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Estado para ver contraseña
+  const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
+    setLoading(true);
     try {
-      await login(data.email, data.password);
-      toast.success('¡Bienvenido de nuevo!');
-      reset();
+      await login({
+        email: data.email,
+        password: data.password
+      });
+      
+      toast.success('¡Bienvenido de nuevo a Yonna!');
       if (onSuccess) onSuccess();
     } catch (error) {
-      toast.error(error.message || 'Error al iniciar sesión');
+      console.error('Error de login:', error);
+      const errorMessage = error.response?.data?.detail || 'Credenciales incorrectas. Intenta de nuevo.';
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      await googleLogin(credentialResponse.credential);
-      toast.success('¡Bienvenido con Google!');
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      toast.error(error.message || 'Error al iniciar sesión con Google');
-    }
-  };
-
-  const handleGoogleError = () => {
-    toast.error('Error al iniciar sesión con Google');
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto p-1">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-4">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#60AB90] to-[#2D6B53] rounded-xl flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">
+          Correo electrónico
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type="email"
+            {...register("email", { 
+              required: "El email es requerido",
+              pattern: {
+                value: /^\S+@\S+$/i,
+                message: "Email inválido"
+              }
+            })}
+            className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#60AB90]/20 transition-all ${
+              errors.email ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-[#60AB90]'
+            }`}
+            placeholder="tu@email.com"
+          />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-          Bienvenido de vuelta
-        </h2>
-        <p className="text-gray-600 text-sm sm:text-base">
-          Ingresa a tu cuenta para continuar aprendiendo
-        </p>
+        {errors.email && (
+          <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.email.message}</p>
+        )}
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <div className="space-y-4">
-          <Input
-            label="Correo electrónico"
-            type="email"
-            placeholder="tu@email.com"
-            error={errors.email?.message}
-            {...register('email')}
-            icon={<Mail size={20} className="text-gray-400" />}
-            className="w-full"
-          />
-          
-          <div className="relative">
-            <Input
-              label="Contraseña"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
-              error={errors.password?.message}
-              {...register('password')}
-              icon={<Lock size={20} className="text-gray-400" />}
-              className="w-full pr-10"
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              className="rounded border-gray-300 text-[#FF8025] focus:ring-[#FF8025]"
-            />
-            <span className="text-gray-600">Recordarme</span>
+      <div>
+        <div className="flex justify-between items-center mb-1.5 ml-1">
+          <label className="block text-sm font-bold text-slate-700">
+            Contraseña
           </label>
-          
+          <a href="#" className="text-xs font-medium text-[#60AB90] hover:underline">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type={showPassword ? "text" : "password"} // Tipo dinámico
+            {...register("password", { 
+              required: "La contraseña es requerida",
+              minLength: { value: 6, message: "Mínimo 6 caracteres" }
+            })}
+            className={`w-full pl-10 pr-10 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#60AB90]/20 transition-all ${
+              errors.password ? 'border-red-300 focus:border-red-500' : 'border-slate-200 focus:border-[#60AB90]'
+            }`}
+            placeholder="••••••••"
+          />
+          {/* Botón de Ver Contraseña */}
           <button
             type="button"
-            className="text-[#FF8025] hover:text-[#E65C00] font-medium transition-colors"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
           >
-            ¿Olvidaste tu contraseña?
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
-
-        <Button
-          type="submit"
-          variant="primary"
-          size="large"
-          loading={loading}
-          className="w-full py-3 text-base font-semibold"
-        >
-          Iniciar Sesión
-        </Button>
-      </form>
-
-      {/* Separator */}
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-white text-gray-500">O continúa con</span>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            theme="outline"
-            size="large"
-            text="continue_with"
-            shape="rectangular"
-            width="100%"
-          />
-        </div>
+        {errors.password && (
+          <p className="text-red-500 text-xs mt-1 ml-1 font-medium">{errors.password.message}</p>
+        )}
       </div>
 
-      {/* Switch to Register */}
-      <div className="mt-6 text-center">
-        <p className="text-gray-600 text-sm">
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-[#60AB90] hover:bg-[#4da385] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#60AB90]/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.98]"
+      >
+        {loading ? <Loader2 className="animate-spin" /> : <LogIn size={20} />}
+        {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+      </button>
+
+      <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-slate-500">o continúa con</span>
+          </div>
+      </div>
+
+      <div className="text-center">
+        <p className="text-slate-600">
           ¿No tienes cuenta?{' '}
           <button
             type="button"
             onClick={onSwitchToRegister}
-            className="text-[#FF8025] hover:text-[#E65C00] font-semibold transition-colors"
+            className="text-[#60AB90] hover:text-[#2D6B53] font-bold transition-colors"
           >
-            Regístrate aquí
+            Regístrate gratis
           </button>
         </p>
       </div>
-    </div>
+    </form>
   );
 };
 

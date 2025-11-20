@@ -108,7 +108,8 @@ class UserStatistic(models.Model):
     def update_statistics(self):
         """Actualiza todas las estadísticas del usuario."""
         from apps.quizzes.models import QuizAttempt
-        from apps.courses.models import Enrollment, Progress
+        from apps.courses.models import Enrollment
+        from apps.progress.models import Progress
         from django.utils import timezone
         from datetime import date
         

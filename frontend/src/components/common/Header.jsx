@@ -1,371 +1,279 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, X, User, Settings, HelpCircle, LogOut, BookOpen, Award, BarChart3 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import LoginModal from '../auth/LoginModal';
+import RegisterModal from '../auth/RegisterModal';
+import { 
+  Home, 
+  Film, 
+  User, 
+  BarChart2, 
+  Menu, 
+  X, 
+  LogOut,
+  Smartphone,
+  ChevronRight
+} from 'lucide-react';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const notifications = [
-    {
-      id: 1,
-      title: '¡Nuevo curso disponible!',
-      message: 'Curso "Saludos Básicos" está listo para comenzar',
-      time: 'Hace 5 min',
-      unread: true,
-      type: 'course'
-    },
-    {
-      id: 2,
-      title: 'Subiste de nivel',
-      message: 'Felicidades, ahora eres nivel 2',
-      time: 'Hace 1 hora',
-      unread: true,
-      type: 'level'
-    },
-    {
-      id: 3,
-      title: 'Recordatorio de práctica',
-      message: 'No olvides practicar hoy',
-      time: 'Hace 2 horas',
-      unread: false,
-      type: 'reminder'
-    }
-  ];
-
-  const menuItems = [
-    { path: '/courses', icon: BookOpen, label: 'Cursos' },
-    { path: '/quizzes', icon: HelpCircle, label: 'Quizzes' },
-    { path: '/progress', icon: BarChart3, label: 'Progreso' },
-    { path: '/achievements', icon: Award, label: 'Logros' },
-  ];
-
-  const unreadCount = notifications.filter(n => n.unread).length;
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Aquí puedes implementar la búsqueda
-      console.log('Buscando:', searchQuery);
-    }
-  };
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
       await logout();
       navigate('/');
+      setIsMenuOpen(false);
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
   };
 
-  const handleNavigation = (path) => {
-    navigate(path);
-    setIsMobileMenuOpen(false);
+  const handleOpenLogin = () => {
+    setIsLoginModalOpen(true);
+    setIsMenuOpen(false);
   };
 
-  const isActivePath = (path) => {
-    return location.pathname.startsWith(path);
+  const handleOpenRegister = () => {
+    setIsRegisterModalOpen(true);
+    setIsMenuOpen(false);
   };
+
+  const handleCloseModals = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(false);
+  };
+
+  const navigation = user ? [
+    { name: 'Inicio', href: '/', icon: Home },
+    { name: 'Cultura Wayuu', href: '/feed', icon: Film },
+    ...(user?.role === 'admin' || user?.role === 'moderator' 
+      ? [{ name: 'Dashboard', href: '/dashboard', icon: BarChart2 }]
+      : []
+    ),
+    { name: 'Mi Perfil', href: '/profile', icon: User },
+  ] : [
+    { name: 'Inicio', href: '/', icon: Home },
+    { name: 'Cultura Wayuu', href: '/feed', icon: Film },
+  ];
+
+  const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo y Navegación Principal */}
-          <div className="flex items-center space-x-8">
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3 cursor-pointer"
-              onClick={() => navigate('/')}
-            >
-              <div className="w-8 h-8 bg-gradient-to-r from-[#60AB90] to-[#2D6B53] rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">Y</span>
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="relative">
+                <div className="absolute inset-0 bg-brand-green/20 rounded-full blur-md group-hover:blur-lg transition-all"></div>
+                <img 
+                  src="/yonna.png" 
+                  alt="Yonna" 
+                  className="relative h-10 w-10 object-contain transform group-hover:scale-110 transition-transform duration-300"
+                />
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold bg-gradient-to-r from-[#60AB90] to-[#2D6B53] bg-clip-text text-transparent">
-                  Yonna Akademia
-                </h1>
-              </div>
-            </motion.div>
+              <span className="text-2xl font-bold text-slate-800 tracking-tight group-hover:text-brand-green transition-colors">
+                Yonna Akademia
+              </span>
+            </Link>
 
-            {/* Navegación Desktop */}
-            <nav className="hidden lg:flex items-center space-x-6">
-              {menuItems.map((item) => {
+            {/* Navigation - Desktop */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navigation.map((item) => {
                 const Icon = item.icon;
-                const isActive = isActivePath(item.path);
-                
                 return (
-                  <button
-                    key={item.path}
-                    onClick={() => handleNavigation(item.path)}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive
-                        ? 'bg-[#60AB90]/10 text-[#2D6B53]'
-                        : 'text-gray-600 hover:text-[#60AB90] hover:bg-gray-50'
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                      isActive(item.href)
+                        ? 'bg-brand-light text-brand-dark ring-1 ring-brand-green/20'
+                        : 'text-slate-500 hover:text-brand-dark hover:bg-slate-50'
                     }`}
                   >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </button>
+                    <Icon size={18} className={`mr-2 ${isActive(item.href) ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                    {item.name}
+                  </Link>
                 );
               })}
             </nav>
-          </div>
 
-          {/* Barra de Búsqueda - Centrada en desktop */}
-          <div className="hidden lg:block flex-1 max-w-md mx-8">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar cursos, quizzes..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#60AB90] focus:border-transparent text-sm"
-                />
-              </div>
-            </form>
-          </div>
-
-          {/* Sección Derecha - Acciones del Usuario */}
-          <div className="flex items-center space-x-3">
-            {/* Barra de Búsqueda Mobile */}
-            <div className="lg:hidden">
-              <button
-                onClick={() => {/* Implementar búsqueda móvil */}}
-                className="p-2 text-gray-600 hover:text-[#60AB90] transition-colors rounded-lg hover:bg-gray-100"
+            {/* Actions - Desktop */}
+            <div className="hidden md:flex items-center gap-4">
+              {/* App Download Link Mini */}
+              <a 
+                href="https://drive.google.com/file/d/1-c593ZnC-us-4zT5qWWVjP8N1rOfUoSp/view?usp=sharing" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-brand-orange transition-colors"
+                title="Descargar App Android"
               >
-                <Search size={20} />
-              </button>
-            </div>
+                <Smartphone size={20} />
+              </a>
 
-            {/* Notificaciones */}
-            <div className="relative">
-              <button
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="relative p-2 text-gray-600 hover:text-[#60AB90] transition-colors rounded-lg hover:bg-gray-100"
-              >
-                <Bell size={20} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
+              <div className="h-6 w-px bg-slate-200"></div>
 
-              <AnimatePresence>
-                {isNotificationsOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsNotificationsOpen(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50"
-                    >
-                      <div className="p-4 border-b border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Notificaciones
-                        </h3>
-                      </div>
-                      
-                      <div className="max-h-96 overflow-y-auto">
-                        {notifications.map((notification) => (
-                          <div
-                            key={notification.id}
-                            className={`p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors ${
-                              notification.unread ? 'bg-blue-50' : ''
-                            }`}
-                            onClick={() => setIsNotificationsOpen(false)}
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900 text-sm">
-                                  {notification.title}
-                                </p>
-                                <p className="text-gray-600 text-xs mt-1">
-                                  {notification.message}
-                                </p>
-                              </div>
-                              {notification.unread && (
-                                <div className="w-2 h-2 bg-[#60AB90] rounded-full ml-2 flex-shrink-0"></div>
-                              )}
-                            </div>
-                            <p className="text-gray-500 text-xs mt-2">
-                              {notification.time}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      <div className="p-4 border-t border-gray-200">
-                        <button className="text-[#60AB90] hover:text-[#2D6B53] text-sm font-medium w-full text-center transition-colors">
-                          Ver todas las notificaciones
-                        </button>
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Menú de Perfil */}
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900">
-                    {user?.first_name} {user?.last_name}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Nivel {Math.floor((user?.xp || 0) / 1000) + 1} • {user?.xp || 0} XP
-                  </p>
+              {user ? (
+                <div className="flex items-center gap-3 pl-2">
+                  <div className="text-right hidden lg:block">
+                    <div className="text-sm font-bold text-slate-700 leading-none mb-1">
+                      {user?.first_name || user?.email?.split('@')[0]}
+                    </div>
+                    <div className="text-xs font-medium text-brand-orange bg-orange-50 px-2 py-0.5 rounded-full inline-block">
+                      Nivel {user?.level || 1}
+                    </div>
+                  </div>
+                  
+                  <div className="relative group cursor-pointer">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-brand-green to-brand-dark flex items-center justify-center text-white font-bold shadow-md ring-2 ring-white group-hover:ring-brand-light transition-all">
+                      {user?.first_name?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                    
+                    {/* Dropdown Logout (Simple hover logic for demo) */}
+                    <div className="absolute right-0 top-full mt-2 w-48 py-1 bg-white rounded-xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        <LogOut size={16} />
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="w-8 h-8 bg-gradient-to-br from-[#FF8025] to-[#E65C00] rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                  {user?.first_name?.[0]}{user?.last_name?.[0]}
+              ) : (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleOpenLogin}
+                    className="text-slate-600 hover:text-brand-dark font-semibold text-sm px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    Ingresar
+                  </button>
+                  <button
+                    onClick={handleOpenRegister}
+                    className="bg-brand-dark hover:bg-brand-green text-white text-sm font-bold px-5 py-2.5 rounded-full shadow-lg shadow-brand-green/30 hover:shadow-brand-green/50 transition-all transform hover:-translate-y-0.5"
+                  >
+                    Crear Cuenta
+                  </button>
                 </div>
-              </button>
-
-              <AnimatePresence>
-                {isProfileMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 z-50"
-                    >
-                      <div className="p-4 border-b border-gray-200">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-[#FF8025] to-[#E65C00] rounded-full flex items-center justify-center text-white font-semibold">
-                            {user?.first_name?.[0]}{user?.last_name?.[0]}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {user?.first_name} {user?.last_name}
-                            </p>
-                            <p className="text-sm text-gray-500">{user?.email}</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="p-2">
-                        <button
-                          onClick={() => {
-                            handleNavigation('/profile');
-                            setIsProfileMenuOpen(false);
-                          }}
-                          className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <User size={18} />
-                          <span className="text-sm">Mi Perfil</span>
-                        </button>
-                        
-                        <button className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Settings size={18} />
-                          <span className="text-sm">Configuración</span>
-                        </button>
-                        
-                        <button className="flex items-center space-x-3 w-full px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-                          <HelpCircle size={18} />
-                          <span className="text-sm">Ayuda</span>
-                        </button>
-                        
-                        <div className="border-t border-gray-200 my-2"></div>
-                        
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center space-x-3 w-full px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <LogOut size={18} />
-                          <span className="text-sm">Cerrar Sesión</span>
-                        </button>
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+              )}
             </div>
 
-            {/* Botón Menú Mobile */}
+            {/* Mobile Menu Button */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-600 hover:text-[#60AB90] transition-colors rounded-lg hover:bg-gray-100"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
             >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Menú Mobile */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden border-t border-gray-200 bg-white overflow-hidden"
-          >
-            <div className="px-4 py-4 space-y-2">
-              {/* Barra de búsqueda móvil */}
-              <form onSubmit={handleSearch} className="pb-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#60AB90] focus:border-transparent text-sm"
-                  />
-                </div>
-              </form>
-
-              {/* Navegación móvil */}
-              {menuItems.map((item) => {
+        {/* Mobile Navigation Overlay */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-xl absolute w-full shadow-2xl animate-in slide-in-from-top-5 duration-200">
+            <div className="p-4 space-y-2">
+              {navigation.map((item) => {
                 const Icon = item.icon;
-                const isActive = isActivePath(item.path);
-                
                 return (
-                  <button
-                    key={item.path}
-                    onClick={() => handleNavigation(item.path)}
-                    className={`flex items-center space-x-3 w-full px-3 py-3 rounded-lg text-left transition-all duration-200 ${
-                      isActive
-                        ? 'bg-[#60AB90]/10 text-[#2D6B53]'
-                        : 'text-gray-700 hover:bg-gray-100'
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`flex items-center justify-between p-3 rounded-xl transition-all ${
+                      isActive(item.href)
+                        ? 'bg-brand-light/50 text-brand-dark font-semibold'
+                        : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <Icon size={20} />
-                    <span className="font-medium">{item.label}</span>
-                  </button>
+                    <div className="flex items-center gap-3">
+                      <Icon size={20} />
+                      {item.name}
+                    </div>
+                    {isActive(item.href) && <ChevronRight size={16} />}
+                  </Link>
                 );
               })}
+
+              <div className="h-px bg-slate-100 my-4"></div>
+
+              {/* Mobile Download CTA */}
+              <a 
+                href="https://drive.google.com/file/d/1-c593ZnC-us-4zT5qWWVjP8N1rOfUoSp/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl text-slate-600 hover:text-brand-orange hover:bg-orange-50 transition-colors"
+              >
+                <Smartphone size={20} />
+                <span>Descargar App Móvil</span>
+              </a>
+
+              <div className="h-px bg-slate-100 my-4"></div>
+
+              {user ? (
+                <div className="bg-slate-50 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-brand-dark flex items-center justify-center text-white font-bold">
+                      {user?.first_name?.[0]?.toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-800">{user?.first_name}</p>
+                      <p className="text-xs text-slate-500">Nivel {user?.level}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-slate-200 rounded-lg text-red-500 font-medium text-sm shadow-sm active:scale-95 transition-transform"
+                  >
+                    <LogOut size={16} />
+                    Cerrar Sesión
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleOpenLogin}
+                    className="py-3 rounded-xl font-semibold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    Ingresar
+                  </button>
+                  <button
+                    onClick={handleOpenRegister}
+                    className="py-3 rounded-xl font-semibold text-white bg-brand-dark hover:bg-brand-green transition-colors shadow-lg shadow-brand-green/20"
+                  >
+                    Registrarse
+                  </button>
+                </div>
+              )}
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
-    </header>
+      </header>
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={handleCloseModals}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+          setIsRegisterModalOpen(true);
+        }}
+      />
+      
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={handleCloseModals}
+        onSwitchToLogin={() => {
+          setIsRegisterModalOpen(false);
+          setIsLoginModalOpen(true);
+        }}
+      />
+    </>
   );
 };
 

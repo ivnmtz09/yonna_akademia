@@ -1,444 +1,279 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Award, Users, BookOpen, ChevronDown, Sparkles, Target, Star, Clock, CheckCircle } from 'lucide-react';
-
-import Button from '../components/common/Button';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import LoginModal from '../components/auth/LoginModal';
 import RegisterModal from '../components/auth/RegisterModal';
-import useAuth from '../hooks/useAuth';
+// IMPORTANTE: Aseguramos que Home esté importado aquí
+import { 
+  BookOpen,
+  Film,
+  ArrowRight,
+  Users,
+  Download,
+  Smartphone,
+  PlayCircle,
+  Headphones,
+  Home 
+} from 'lucide-react';
 
 const HomePage = () => {
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
-  const [currentFeature, setCurrentFeature] = useState(0);
   const { user } = useAuth();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentFeature((prev) => (prev + 1) % features.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   const features = [
     {
-      icon: <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10" />,
-      title: 'Aprende Wayuunaiki',
-      description: 'Domina el idioma del pueblo Wayuu con lecciones interactivas y culturalmente relevantes.',
-      color: 'from-[#60AB90] to-[#2D6B53]',
-      stats: '50+ Lecciones'
+      icon: Film,
+      title: 'Cine y Documentales',
+      description: 'Visualiza historias narradas por sabedores. Un archivo audiovisual para preservar la memoria.',
+      link: '/feed?type=video',
+      bg: 'bg-brand-light',
+      iconColor: 'text-brand-dark'
     },
     {
-      icon: <Award className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10" />,
-      title: 'Sistema de Niveles',
-      description: 'Sube de nivel, gana XP y desbloquea nuevos cursos mientras progresas en tu aprendizaje.',
-      color: 'from-[#FF8025] to-[#E65C00]',
-      stats: 'XP Progresivo'
+      icon: Headphones,
+      title: 'Relatos y Audio',
+      description: 'Escucha la tradición oral, música y narraciones ancestrales en alta calidad.',
+      link: '/feed?type=audio',
+      bg: 'bg-orange-50',
+      iconColor: 'text-brand-orange'
     },
     {
-      icon: <Users className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10" />,
-      title: 'Comunidad Activa',
-      description: 'Conecta con otros estudiantes y sabedores Wayuu para practicar y compartir conocimientos.',
-      color: 'from-[#60AB90] to-[#2D6B53]',
-      stats: 'Comunidad Viva'
-    },
-    {
-      icon: <Target className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10" />,
-      title: 'Aprendizaje Gamificado',
-      description: 'Logros, recompensas y desafíos que hacen del aprendizaje una experiencia divertida.',
-      color: 'from-[#FF8025] to-[#E65C00]',
-      stats: '++ Motivación'
+      icon: BookOpen,
+      title: 'Documentos e Historia',
+      description: 'Acceso a fotografías, escritos y archivos digitalizados sobre la cultura Wayuu.',
+      link: '/feed?type=document',
+      bg: 'bg-blue-50',
+      iconColor: 'text-blue-600'
     }
   ];
 
-  const benefits = [
-    {
-      icon: <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />,
-      text: 'Método probado y efectivo'
-    },
-    {
-      icon: <Clock className="w-4 h-4 sm:w-5 sm:h-5" />,
-      text: 'Aprende a tu propio ritmo'
-    },
-    {
-      icon: <Star className="w-4 h-4 sm:w-5 sm:h-5" />,
-      text: 'Contenido culturalmente auténtico'
-    },
-    {
-      icon: <Users className="w-4 h-4 sm:w-5 sm:h-5" />,
-      text: 'Soporte de la comunidad Wayuu'
-    }
-  ];
+  const handleOpenLogin = () => setIsLoginModalOpen(true);
+  const handleOpenRegister = () => setIsRegisterModalOpen(true);
+  const handleCloseModals = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F0F9F5] via-white to-[#F0F9F5] overflow-x-hidden">
-      {/* Header Simple para Home (sin navegación) */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#60AB90]/20 shadow-sm"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 sm:h-20">
-            {/* Logo */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3"
-            >
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-[#60AB90] to-[#2D6B53] rounded-lg sm:rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-sm sm:text-base">Y</span>
-              </div>
-              <div>
-                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-[#60AB90] to-[#2D6B53] bg-clip-text text-transparent">
-                  Yonna Akademia
-                </h1>
-                <p className="text-xs text-gray-500 font-medium hidden sm:block">Cultura Wayuu • Idioma Vivo</p>
-              </div>
-            </motion.div>
-            
-            {/* Botones de Acción */}
-            {!user && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center space-x-2 sm:space-x-3"
-              >
-                <Button 
-                  variant="outline"
-                  onClick={() => setShowLogin(true)}
-                  className="text-xs sm:text-sm border-[#60AB90] text-[#60AB90] hover:bg-[#60AB90] hover:text-white transition-all duration-300 px-3 sm:px-4 py-2"
-                >
-                  Iniciar Sesión
-                </Button>
-                <Button 
-                  variant="primary"
-                  onClick={() => setShowRegister(true)}
-                  className="text-xs sm:text-sm bg-gradient-to-r from-[#FF8025] to-[#E65C00] hover:from-[#E65C00] hover:to-[#CC4A00] shadow-lg hover:shadow-xl px-3 sm:px-4 py-2"
-                >
-                  Comenzar
-                </Button>
-              </motion.div>
-            )}
+    <>
+      <div className="min-h-screen bg-white">
+        
+        {/* Hero Section */}
+        <section className="relative pt-12 pb-16 lg:pt-32 lg:pb-32 overflow-hidden">
+          <div className="absolute top-0 right-0 w-full h-full overflow-hidden -z-10">
+             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-brand-green/10 rounded-full blur-[100px]"></div>
+             <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] bg-brand-orange/10 rounded-full blur-[80px]"></div>
+             <div className="absolute inset-0 wayuu-pattern opacity-[0.03]"></div>
           </div>
-        </div>
-      </motion.header>
 
-      {/* Hero Section */}
-      <section className="relative pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-16 lg:pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Text Content */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center lg:text-left space-y-6 sm:space-y-8"
-            >
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="inline-flex items-center space-x-2 bg-[#60AB90]/10 text-[#2D6B53] px-4 py-2 rounded-full border border-[#60AB90]/20 text-sm"
-              >
-                <Sparkles className="w-4 h-4 text-[#FF8025]" />
-                <span className="font-semibold">Plataforma especializada en Wayuunaiki</span>
-              </motion.div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
               
-              {/* Título Principal */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-4"
-              >
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                  Aprende{' '}
-                  <span className="bg-gradient-to-r from-[#60AB90] to-[#FF8025] bg-clip-text text-transparent">
-                    Wayuunaiki
-                  </span>{' '}
-                  de forma divertida
+              <div className="space-y-8 text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-light border border-brand-green/20 text-brand-dark font-semibold text-sm">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-green opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-green"></span>
+                  </span>
+                  Archivo Digital Cultural
+                </div>
+
+                <h1 className="text-5xl lg:text-7xl font-extrabold text-slate-900 leading-[1.1] tracking-tight">
+                  Memoria Viva <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-green to-brand-dark">
+                    Wayuu
+                  </span>
                 </h1>
                 
-                <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                  Sumérgete en la cultura Wayuu mientras dominas su idioma a través de 
-                  lecciones gamificadas, quizzes interactivos y una comunidad vibrante.
+                <p className="text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                  Explora nuestra colección multimedia. Documentales, fotografías y escritos que preservan la esencia y sabiduría de nuestro pueblo.
                 </p>
-              </motion.div>
 
-              {/* Benefits List */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
-              >
-                {benefits.map((benefit, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + index * 0.1 }}
-                    className="flex items-center space-x-3 text-gray-700 text-sm sm:text-base"
-                  >
-                    <div className="w-6 h-6 bg-[#60AB90]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      {benefit.icon}
-                    </div>
-                    <span className="font-medium">{benefit.text}</span>
-                  </motion.div>
-                ))}
-              </motion.div>
-              
-              {/* Botones de Acción */}
-              {!user && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 }}
-                  className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-4"
-                >
-                  <Button 
-                    size="large" 
-                    variant="primary"
-                    onClick={() => setShowRegister(true)}
-                    className="text-sm sm:text-base px-6 sm:px-8 py-3 bg-gradient-to-r from-[#FF8025] to-[#E65C00] hover:from-[#E65C00] hover:to-[#CC4A00] shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 font-semibold"
-                  >
-                    <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                    Comenzar Ahora
-                  </Button>
-                  <Button 
-                    size="large" 
-                    variant="outline"
-                    onClick={() => setShowLogin(true)}
-                    className="text-sm sm:text-base px-6 sm:px-8 py-3 border-2 border-[#60AB90] text-[#60AB90] hover:bg-[#60AB90] hover:text-white font-semibold"
-                  >
-                    Ver Demo
-                  </Button>
-                </motion.div>
-              )}
-            </motion.div>
-
-            {/* Feature Showcase */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative mt-8 lg:mt-0"
-            >
-              <div className="relative z-10 bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentFeature}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                    className="text-center space-y-4"
-                  >
-                    <div className={`w-14 h-14 sm:w-16 sm:h-16 mx-auto bg-gradient-to-r ${features[currentFeature].color} rounded-2xl flex items-center justify-center text-white shadow-lg`}>
-                      {features[currentFeature].icon}
-                    </div>
-                    <div>
-                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                        {features[currentFeature].title}
-                      </h3>
-                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                        {features[currentFeature].description}
-                      </p>
-                    </div>
-                    <div className="bg-gradient-to-r from-[#60AB90] to-[#2D6B53] text-white py-2 px-4 rounded-full inline-block text-sm">
-                      <span className="font-semibold">{features[currentFeature].stats}</span>
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-
-                {/* Feature Indicators */}
-                <div className="flex justify-center space-x-2 mt-6">
-                  {features.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentFeature(index)}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        index === currentFeature 
-                          ? 'bg-[#FF8025] w-6' 
-                          : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
-                    />
-                  ))}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+                  {user ? (
+                    <Link to="/feed" className="btn-primary group">
+                      <span>Explorar Archivo</span>
+                      <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+                    </Link>
+                  ) : (
+                    <>
+                      <button onClick={handleOpenRegister} className="btn-primary group">
+                        <span>Crear Cuenta</span>
+                        <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
+                      </button>
+                      <button onClick={handleOpenLogin} className="px-8 py-4 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-brand-green/50 transition-all shadow-sm">
+                        Ingresar
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* Background Elements */}
-              <div className="absolute -top-4 -left-4 w-16 h-16 bg-[#FF8025]/10 rounded-full blur-xl"></div>
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-[#60AB90]/10 rounded-full blur-xl"></div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-              Por qué elegir{' '}
-              <span className="bg-gradient-to-r from-[#60AB90] to-[#FF8025] bg-clip-text text-transparent">
-                Yonna Akademia
-              </span>
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Combinamos la sabiduría ancestral del pueblo Wayuu con tecnología moderna 
-              para crear una experiencia de aprendizaje única y efectiva.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -4 }}
-                className="group"
-              >
-                <div className="bg-gray-50 rounded-2xl p-6 h-full border border-gray-200 hover:shadow-lg transition-all duration-300">
-                  <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#60AB90] transition-colors duration-300">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
+              <div className="relative hidden lg:block">
+                <div className="relative z-10 animate-[float_6s_ease-in-out_infinite]">
+                  <img 
+                    src="/mascota.png" 
+                    alt="Yonna Archivo Digital" 
+                    className="w-full max-w-md mx-auto drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                  />
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      {!user && (
-        <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-[#60AB90] to-[#2D6B53]">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center text-white space-y-6"
-            >
-              <div className="space-y-4">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold">
-                  ¿Listo para comenzar tu viaje?
-                </h2>
-                <p className="text-base sm:text-lg opacity-90 max-w-2xl mx-auto leading-relaxed">
-                  Únete a nuestra comunidad y descubre la riqueza cultural del pueblo Wayuu 
-                  mientras aprendes su idioma de manera divertida y efectiva.
-                </p>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-brand-green/20 to-transparent rounded-full blur-3xl -z-10"></div>
               </div>
-              
-              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-6">
-                <Button 
-                  size="large" 
-                  variant="secondary"
-                  onClick={() => setShowRegister(true)}
-                  className="text-sm sm:text-base px-6 sm:px-8 py-3 bg-white text-[#60AB90] hover:bg-gray-100 hover:scale-105 transform transition-all duration-300 shadow-xl font-semibold"
-                >
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Crear Cuenta Gratis
-                </Button>
-                <Button 
-                  size="large" 
-                  variant="outline"
-                  onClick={() => setShowLogin(true)}
-                  className="text-sm sm:text-base px-6 sm:px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-[#60AB90] font-semibold"
-                >
-                  Ya tengo cuenta
-                </Button>
-              </div>
-            </motion.div>
+            </div>
           </div>
         </section>
-      )}
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Brand */}
-            <div className="md:col-span-2 lg:col-span-2 space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-[#60AB90] to-[#2D6B53] rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">Y</span>
+        {/* Stats Bar */}
+        <section className="bg-brand-dark py-12 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/welcome.png')] opacity-10 bg-cover bg-center mix-blend-overlay"></div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-white/10">
+              {[
+                { label: 'Usuarios', value: '20+', icon: Users },
+                { label: 'Documentos', value: '10+', icon: BookOpen },
+                { label: 'Multimedia', value: '10+', icon: PlayCircle },
+                { label: 'Comunidades', value: '2', icon: Home }, // Aquí se usa Home
+              ].map((stat, i) => (
+                <div key={i} className="text-center px-4">
+                  <stat.icon className="w-6 h-6 text-brand-orange mx-auto mb-2 opacity-80" />
+                  <div className="text-3xl lg:text-4xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-xs text-brand-light/70 uppercase tracking-widest font-medium">{stat.label}</div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold">Yonna Akademia</h3>
-                  <p className="text-[#60AB90] font-medium">Cultura Wayuu • Idioma Vivo</p>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Features Grid */}
+        <section className="py-24 bg-slate-50/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Un Museo Digital Abierto</h2>
+              <p className="text-lg text-slate-500">Accede a contenido curado para conocer la profundidad de la cultura Wayuu.</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <Link 
+                    to={feature.link} 
+                    key={index}
+                    className="group bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl border border-slate-100 hover:border-brand-green/30 transition-all duration-300 relative overflow-hidden"
+                  >
+                    <div className={`absolute top-0 right-0 w-32 h-32 ${feature.bg} rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-150 opacity-50`}></div>
+                    
+                    <div className={`inline-flex p-4 rounded-xl ${feature.bg} ${feature.iconColor} mb-6 relative z-10`}>
+                      <Icon size={32} strokeWidth={1.5} />
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-brand-dark transition-colors">
+                      {feature.title}
+                    </h3>
+                    <p className="text-slate-600 leading-relaxed mb-6">
+                      {feature.description}
+                    </p>
+                    
+                    <div className="flex items-center text-sm font-bold text-brand-green group-hover:gap-2 transition-all">
+                      Ver Contenido <ArrowRight size={16} className="ml-1" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* App Download Section */}
+        <section className="py-20 bg-white relative overflow-hidden border-y border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-brand-dark rounded-3xl overflow-hidden shadow-2xl relative">
+              <div className="absolute inset-0 wayuu-pattern opacity-10"></div>
+              
+              <div className="grid md:grid-cols-2 gap-12 items-center p-12 relative z-10">
+                <div className="text-white space-y-6">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/10 text-brand-orange text-xs font-bold uppercase tracking-wide">
+                    <Smartphone size={14} />
+                    Solo en la App Móvil
+                  </div>
+                  
+                  <h2 className="text-3xl md:text-4xl font-bold">¿Quieres aprender Wayuunaiki?</h2>
+                  <p className="text-brand-light/90 text-lg">
+                    Descarga <strong>Yonna App</strong> para acceder al curso interactivo gamificado.
+                    Completa lecciones, mantén tu racha y aprende palabras nuevas cada día jugando.
+                  </p>
+
+                  <ul className="space-y-3 pt-2 text-brand-light/80">
+                     <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
+                        Sistema de vidas y niveles
+                     </li>
+                     <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
+                        Ejercicios de pronunciación y escritura
+                     </li>
+                     <li className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
+                        Modo offline incluido
+                     </li>
+                  </ul>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    <a 
+                      href="https://drive.google.com/file/d/1-c593ZnC-us-4zT5qWWVjP8N1rOfUoSp/view?usp=sharing"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-3 bg-brand-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-brand-orange/20 transform hover:-translate-y-1"
+                    >
+                      <Download size={20} />
+                      <span>Descargar APK y Jugar</span>
+                    </a>
+                  </div>
+                </div>
+                
+                <div className="hidden md:flex justify-center items-center relative">
+                  <div className="absolute w-64 h-64 bg-brand-green/30 rounded-full blur-3xl"></div>
+                  <img 
+                    src="/welcome.png" 
+                    alt="Yonna App Gamificada" 
+                    className="relative w-72 drop-shadow-2xl transform rotate-3 hover:rotate-0 transition-all duration-500"
+                  />
                 </div>
               </div>
-              <p className="text-gray-400 max-w-md leading-relaxed text-sm">
-                Plataforma educativa dedicada a preservar y enseñar el idioma Wayuunaiki 
-                mediante tecnología moderna y metodologías gamificadas.
-              </p>
-            </div>
-            
-            {/* Links */}
-            <div className="space-y-3">
-              <h3 className="font-bold text-white">Enlaces Rápidos</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Inicio</a></li>
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Cursos</a></li>
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Quizzes</a></li>
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Comunidad</a></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h3 className="font-bold text-white">Soporte</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Centro de Ayuda</a></li>
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Contacto</a></li>
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Política de Privacidad</a></li>
-                <li><a href="#" className="hover:text-[#60AB90] transition-colors duration-300 text-sm">Términos</a></li>
-              </ul>
             </div>
           </div>
-          
-          <div className="border-t border-gray-700 mt-8 pt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              &copy; 2024 Yonna Akademia. Honrando la cultura Wayuu.
+        </section>
+
+        {/* Footer */}
+        <footer className="bg-white py-12 border-t border-slate-100">
+          <div className="max-w-7xl mx-auto px-4 text-center">
+            <img src="/yonna.png" alt="Yonna" className="h-12 w-12 mx-auto mb-4 opacity-80 grayscale hover:grayscale-0 transition-all" />
+            <p className="text-slate-500 text-sm">
+              &copy; {new Date().getFullYear()} Yonna Akademia. Preservando el futuro.
             </p>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </div>
 
-      {/* Modals */}
-      <LoginModal 
-        isOpen={showLogin}
-        onClose={() => setShowLogin(false)}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={handleCloseModals}
         onSwitchToRegister={() => {
-          setShowLogin(false);
-          setShowRegister(true);
+          setIsLoginModalOpen(false);
+          setIsRegisterModalOpen(true);
         }}
       />
-
-      <RegisterModal 
-        isOpen={showRegister}
-        onClose={() => setShowRegister(false)}
+      
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={handleCloseModals}
         onSwitchToLogin={() => {
-          setShowRegister(false);
-          setShowLogin(true);
+          setIsRegisterModalOpen(false);
+          setIsLoginModalOpen(true);
         }}
       />
-    </div>
+    </>
   );
 };
 

@@ -18,8 +18,7 @@ from .serializers import (
 from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator
 from apps.users.models import User
 from apps.courses.models import Course
-from apps.quizzes.models import Quiz
-from apps.quizzes.models import QuizAttempt
+from apps.quizzes.models import Quiz, QuizAttempt
 from apps.progress.models import Progress, GlobalProgress
 
 

@@ -1,5 +1,6 @@
+// /src/context/AuthContext.jsx - VERSIÓN SIMPLIFICADA
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from '../api/axios';
+import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
@@ -16,131 +17,96 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      fetchProfile();
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchProfile = async () => {
+  // LOGIN SIMPLIFICADO - Usa solo tu endpoint personalizado
+  const login = async (credentials) => {
     try {
-      const response = await axios.get('/auth/profile/');
-      setUser(response.data);
+      console.log('🔐 Iniciando sesión con:', credentials);
+      
+      // Usar directamente tu LoginView que SÍ FUNCIONA
+      const result = await authService.login(credentials);
+      
+      localStorage.setItem('accessToken', result.access);
+      localStorage.setItem('refreshToken', result.refresh);
+      
+      // Los datos del usuario vienen en la respuesta del login
+      setUser({
+        id: result.id,
+        email: result.email,
+        role: result.role,
+        level: result.level,
+        xp: result.xp,
+        first_name: result.first_name,
+        last_name: result.last_name
+      });
+      
+      return result;
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      console.error('❌ Error en login:', error);
+      throw error;
+    }
+  };
+
+  // REGISTRO - Ya funciona bien
+  const register = async (userData) => {
+    const result = await authService.register(userData);
+    if (result.access) {
+      localStorage.setItem('accessToken', result.access);
+      localStorage.setItem('refreshToken', result.refresh);
+      setUser(result.user || result);
+    }
+    return result;
+  };
+
+  // LOGOUT - Simplificado
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        await authService.logout(refreshToken);
+      }
+    } catch (error) {
+      console.warn('Error durante logout, limpiando localmente:', error);
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setUser(null);
+      toast.success('Sesión cerrada');
+    }
+  };
+
+  // VERIFICAR AUTENTICACIÓN
+  const checkAuth = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Intentar obtener usuario actual
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
+    } catch (error) {
+      console.error('Error verificando autenticación:', error);
+      // Limpiar tokens inválidos
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (email, password) => {
-    try {
-      const response = await axios.post('/auth/login/', {
-        email,
-        password,
-      });
-
-      const { access, refresh, ...userData } = response.data;
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      setUser(userData);
-      return userData;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error al iniciar sesión');
-    }
-  };
-
-  const googleLogin = async (credential) => {
-    try {
-      const response = await axios.post('/auth/google/', {
-        access_token: credential
-      });
-
-      const { access, refresh, ...userData } = response.data;
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      setUser(userData);
-      return userData;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error al iniciar sesión con Google');
-    }
-  };
-
-  const register = async (userData) => {
-    try {
-      const response = await axios.post('/auth/register/', userData);
-      
-      // Auto-login después del registro
-      const loginResponse = await axios.post('/auth/login/', {
-        email: userData.email,
-        password: userData.password1
-      });
-
-      const { access, refresh, ...userDataFromLogin } = loginResponse.data;
-      
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      
-      setUser(userDataFromLogin);
-      return userDataFromLogin;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error al registrar usuario');
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    setUser(null);
-    toast.success('¡Hasta pronto!');
-  };
-
-  const updateProfile = async (profileData) => {
-    try {
-      const response = await axios.patch('/auth/profile/', profileData);
-      setUser(prev => ({ ...prev, ...response.data }));
-      toast.success('Perfil actualizado correctamente');
-      return response.data;
-    } catch (error) {
-      toast.error('Error al actualizar el perfil');
-      throw error;
-    }
-  };
-
-  const addXP = async (xpAmount) => {
-    try {
-      const response = await axios.post('/auth/add-xp/', { xp_amount: xpAmount });
-      setUser(prev => ({
-        ...prev,
-        xp: response.data.xp,
-        level: response.data.level,
-      }));
-      toast.success(`¡Ganaste ${xpAmount} XP!`);
-      return response.data;
-    } catch (error) {
-      toast.error('Error al agregar XP');
-      throw error;
-    }
-  };
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   const value = {
     user,
     loading,
     login,
-    googleLogin,
     register,
     logout,
-    updateProfile,
-    addXP,
+    checkAuth
   };
 
   return (
@@ -149,5 +115,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export default AuthContext;

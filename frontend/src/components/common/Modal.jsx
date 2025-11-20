@@ -1,82 +1,47 @@
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-const Modal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
-  size = 'medium',
-  closeOnOverlayClick = true 
-}) => {
+const Modal = ({ isOpen, onClose, title, children }) => {
+  // Cerrar con tecla ESC
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
     };
-  }, [isOpen]);
-
-  const sizes = {
-    small: 'max-w-sm',
-    medium: 'max-w-md',
-    large: 'max-w-lg',
-    xlarge: 'max-w-2xl',
-  };
+    if (isOpen) window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay con backdrop blur */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-opacity-50 backdrop-blur-sm"
-            onClick={closeOnOverlayClick ? onClose : undefined}
-          />
-          
-          {/* Modal */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      {/* Backdrop con Blur */}
+      <div 
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+        onClick={onClose}
+      ></div>
+
+      {/* Contenido del Modal */}
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto relative z-10 animate-in fade-in zoom-in-95 duration-200 border border-slate-100">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 sticky top-0 bg-white/95 backdrop-blur-md z-20">
+          <h2 className="text-xl font-bold text-slate-800">{title}</h2>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label="Cerrar"
           >
-            {/* Header */}
-            {(title || onClose) && (
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                {title && (
-                  <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-                )}
-                {onClose && (
-                  <button
-                    onClick={onClose}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
-                  >
-                    <X size={20} />
-                  </button>
-                )}
-              </div>
-            )}
-            
-            {/* Content */}
-            <div className="p-6">
-              {children}
-            </div>
-          </motion.div>
+            <X size={20} />
+          </button>
         </div>
-      )}
-    </AnimatePresence>
+        
+        {/* Body */}
+        <div className="p-6">
+          {children}
+        </div>
+      </div>
+    </div>
   );
 };
 

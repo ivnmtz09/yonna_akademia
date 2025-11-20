@@ -180,3 +180,10 @@ def logout_view(request):
             {"error": "Error al cerrar sesión."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
+class CurrentUserView(generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user

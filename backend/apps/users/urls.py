@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     RegisterView,
     ProfileView,
-    UserDetailView,
+    CurrentUserView,
     LoginView,
     GoogleAuthView,
     AddXPView,
@@ -20,7 +20,7 @@ urlpatterns = [
     
     # Perfil y usuario actual
     path("profile/", ProfileView.as_view(), name="profile"),
-    path("me/", UserDetailView.as_view(), name="user-detail"),
+    path("me/", CurrentUserView.as_view(), name="current-user"),
     
     # Gestión de usuarios (nuevas - para admin/moderator)
     path("users/", UserListView.as_view(), name="user-list"),

@@ -1,225 +1,172 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Edit, Award, TrendingUp, BookOpen, Clock } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-
-import Button from '../common/Button';
-import Input from '../common/Input';
-import Modal from '../common/Modal';
-import useAuth from '../../hooks/useAuth';
+import React from 'react';
+import { useStats } from '../../hooks/useStats';
+import { useAuth } from '../../context/AuthContext';
+import { 
+  User, 
+  Trophy, 
+  Zap, 
+  TrendingUp, 
+  Smartphone, 
+  Download,
+  Award,
+  Calendar
+} from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user, updateProfile, loading } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    defaultValues: {
-      telefono: user?.telefono || '',
-      localidad: user?.localidad || '',
-      gustos: user?.gustos || '',
-    }
-  });
+  const { user } = useAuth();
+  const { stats, profile, loading } = useStats();
 
-  const onSubmit = async (data) => {
-    try {
-      await updateProfile(data);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
 
-  const calculateLevel = (xp) => {
-    return Math.floor(xp / 1000) + 1;
-  };
-
-  const calculateProgress = (xp) => {
-    const currentLevelXp = xp % 1000;
-    return (currentLevelXp / 1000) * 100;
-  };
-
-  const stats = [
-    {
-      label: 'Nivel Actual',
-      value: calculateLevel(user?.xp || 0),
-      icon: <Award className="w-6 h-6" />,
-      color: 'text-orange-500'
-    },
-    {
-      label: 'XP Total',
-      value: user?.xp || 0,
-      icon: <TrendingUp className="w-6 h-6" />,
-      color: 'text-green-500'
-    },
-    {
-      label: 'Cursos Completados',
-      value: '3',
-      icon: <BookOpen className="w-6 h-6" />,
-      color: 'text-blue-500'
-    },
-    {
-      label: 'Días de Racha',
-      value: '7',
-      icon: <Clock className="w-6 h-6" />,
-      color: 'text-purple-500'
-    }
-  ];
+  // Datos normalizados
+  const userData = profile?.usuario || user;
+  const userXp = stats?.user_xp || userData?.xp || 0;
+  const userLevel = stats?.user_level || userData?.level || 1;
+  const progress = stats?.progress_to_next_level || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl shadow-sm p-8 mb-8"
-        >
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
-            <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {user?.first_name?.[0]}{user?.last_name?.[0]}
+    <div className="min-h-screen bg-slate-50 py-8 pb-20">
+      <div className="container mx-auto px-4 max-w-5xl">
+        
+        {/* Header Profile Card */}
+        <div className="bg-white rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 p-8 mb-8 relative overflow-hidden">
+           {/* Decoración de fondo */}
+           <div className="absolute top-0 right-0 w-64 h-64 bg-brand-light rounded-full -mr-16 -mt-16 opacity-50 pointer-events-none"></div>
+           
+           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+              {/* Avatar */}
+              <div className="relative">
+                 <div className="w-28 h-28 bg-gradient-to-br from-brand-green to-brand-dark rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-xl ring-4 ring-white">
+                    {userData?.first_name?.[0]}{userData?.last_name?.[0]}
+                 </div>
+                 <div className="absolute -bottom-2 -right-2 bg-brand-orange text-white text-xs font-bold px-3 py-1 rounded-full shadow-md border-2 border-white">
+                    Nivel {userLevel}
+                 </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {user?.first_name} {user?.last_name}
-                </h1>
-                <p className="text-gray-600">{user?.email}</p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditing(true)}
-              className="flex items-center space-x-2"
-            >
-              <Edit className="w-4 h-4" />
-              <span>Editar Perfil</span>
-            </Button>
-          </div>
 
-          {/* Progress Bar */}
-          <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                Nivel {calculateLevel(user?.xp || 0)}
-              </span>
-              <span className="text-sm text-gray-500">
-                {user?.xp || 0} XP
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${calculateProgress(user?.xp || 0)}%` }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="bg-gradient-to-r from-orange-400 to-orange-600 h-3 rounded-full"
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-            >
-              <div className={`${stat.color} mb-3`}>
-                {stat.icon}
+              <div className="flex-1 pt-2">
+                 <h1 className="text-3xl font-bold text-slate-900">
+                    {userData?.first_name} {userData?.last_name}
+                 </h1>
+                 <p className="text-slate-500 font-medium mb-4">{userData?.email}</p>
+                 
+                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
+                       <User size={14} className="mr-1.5" /> {userData?.role}
+                    </span>
+                 </div>
               </div>
-              <div className="text-2xl font-bold text-gray-900 mb-1">
-                {stat.value}
-              </div>
-              <div className="text-sm text-gray-600">
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
+           </div>
         </div>
 
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl shadow-sm p-8"
-        >
-          <h2 className="text-xl font-bold text-gray-900 mb-6">
-            Actividad Reciente
-          </h2>
-          <div className="space-y-4">
-            {[
-              { action: 'Completaste el quiz "Saludos Básicos"', xp: '+50 XP', time: 'Hace 2 horas' },
-              { action: 'Desbloqueaste el curso "Números"', xp: '+25 XP', time: 'Hace 1 día' },
-              { action: 'Subiste al Nivel 3', xp: '+100 XP', time: 'Hace 2 días' },
-            ].map((activity, index) => (
-              <div key={index} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                <div>
-                  <p className="text-gray-900 font-medium">{activity.action}</p>
-                  <p className="text-sm text-gray-500">{activity.time}</p>
-                </div>
-                <span className="text-green-500 font-semibold">{activity.xp}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           
+           {/* Columna Izquierda: Estadísticas */}
+           <div className="lg:col-span-2 space-y-8">
+              
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-3 mb-2">
+                       <div className="p-2 bg-brand-light rounded-lg text-brand-dark">
+                          <Trophy size={20} />
+                       </div>
+                       <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">Nivel Actual</span>
+                    </div>
+                    <p className="text-4xl font-extrabold text-slate-800">{userLevel}</p>
+                 </div>
+
+                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-3 mb-2">
+                       <div className="p-2 bg-orange-50 rounded-lg text-brand-orange">
+                          <Zap size={20} />
+                       </div>
+                       <span className="text-sm font-bold text-slate-500 uppercase tracking-wide">XP Total</span>
+                    </div>
+                    <p className="text-4xl font-extrabold text-slate-800">{userXp}</p>
+                 </div>
               </div>
-            ))}
-          </div>
-        </motion.div>
+
+              {/* Progress Bar Card */}
+              <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                 <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                       <TrendingUp className="text-brand-green" /> Tu Progreso
+                    </h3>
+                    <span className="text-sm font-bold text-slate-400">Siguiente Nivel</span>
+                 </div>
+
+                 <div className="relative pt-2 mb-6">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">
+                       <span>Nivel {userLevel}</span>
+                       <span>{progress}% Completado</span>
+                       <span>Nivel {userLevel + 1}</span>
+                    </div>
+                    <div className="overflow-hidden h-4 text-xs flex rounded-full bg-slate-100">
+                       <div 
+                          style={{ width: `${progress}%` }} 
+                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-brand-green to-brand-dark transition-all duration-1000 ease-out relative"
+                       >
+                          <div className="absolute top-0 left-0 w-full h-full bg-white/20 animate-[shimmer_2s_infinite]"></div>
+                       </div>
+                    </div>
+                 </div>
+
+                 <p className="text-slate-500 text-sm text-center bg-slate-50 py-3 rounded-xl border border-slate-100">
+                    {stats?.next_level_xp 
+                       ? `Necesitas ${stats.next_level_xp - userXp} XP más para subir de nivel` 
+                       : '¡Sigue aprendiendo para alcanzar la grandeza!'}
+                 </p>
+              </div>
+
+              {/* Activity Log (Placeholder styled) */}
+              <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                 <h3 className="text-lg font-bold text-slate-800 mb-6">Logros Recientes</h3>
+                 <div className="flex items-center justify-center py-8 text-slate-400 border-2 border-dashed border-slate-100 rounded-xl">
+                    <div className="text-center">
+                       <Award size={32} className="mx-auto mb-2 opacity-50" />
+                       <p className="text-sm">Comienza lecciones en la App para ganar insignias</p>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           {/* Columna Derecha: CTA App */}
+           <div className="lg:col-span-1">
+              <div className="bg-brand-dark rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl sticky top-24">
+                 <div className="absolute inset-0 wayuu-pattern opacity-10"></div>
+                 <div className="relative z-10 text-center">
+                    <div className="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm border border-white/20">
+                       <Smartphone size={40} className="text-brand-orange" />
+                    </div>
+                    
+                    <h3 className="text-2xl font-bold mb-3">¡Lleva tu aprendizaje al siguiente nivel!</h3>
+                    <p className="text-brand-light/80 mb-8 text-sm leading-relaxed">
+                       Las estadísticas detalladas, lecciones interactivas y el ranking global están disponibles exclusivamente en nuestra App Móvil.
+                    </p>
+
+                    <a 
+                       href="https://drive.google.com/file/d/1-c593ZnC-us-4zT5qWWVjP8N1rOfUoSp/view?usp=sharing"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="block w-full bg-brand-orange hover:bg-orange-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-brand-orange/30 transition-transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                    >
+                       <Download size={20} /> Descargar APK
+                    </a>
+                    
+                    <p className="text-xs text-white/40 mt-4">Sincronización automática</p>
+                 </div>
+              </div>
+           </div>
+
+        </div>
       </div>
-
-      {/* Edit Profile Modal */}
-      <Modal
-        isOpen={isEditing}
-        onClose={() => setIsEditing(false)}
-        title="Editar Perfil"
-        size="medium"
-      >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label="Teléfono"
-            type="tel"
-            placeholder="Tu número de teléfono"
-            {...register('telefono')}
-            error={errors.telefono?.message}
-          />
-          
-          <Input
-            label="Localidad"
-            type="text"
-            placeholder="Tu ciudad o región"
-            {...register('localidad')}
-            error={errors.localidad?.message}
-          />
-          
-          <Input
-            label="Intereses y Gustos"
-            type="text"
-            placeholder="Tus intereses relacionados con la cultura Wayuu"
-            {...register('gustos')}
-            error={errors.gustos?.message}
-          />
-
-          <div className="flex space-x-3 pt-4">
-            <Button
-              type="submit"
-              variant="primary"
-              loading={loading}
-              className="flex-1"
-            >
-              Guardar Cambios
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditing(false)}
-              className="flex-1"
-            >
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };

@@ -1,236 +1,178 @@
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
-import { Mail, Lock, User, Eye, EyeOff, Sparkles } from 'lucide-react';
-import { GoogleLogin } from '@react-oauth/google';
-import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import { User, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react';
 
-import Button from '../common/Button';
-import Input from '../common/Input';
-import useAuth from '../../hooks/useAuth';
-
-const registerSchema = yup.object({
-  first_name: yup
-    .string()
-    .required('El nombre es requerido')
-    .min(2, 'El nombre debe tener al menos 2 caracteres'),
-  last_name: yup
-    .string()
-    .required('El apellido es requerido')
-    .min(2, 'El apellido debe tener al menos 2 caracteres'),
-  email: yup
-    .string()
-    .email('Ingresa un email válido')
-    .required('El email es requerido'),
-  password1: yup
-    .string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'La contraseña debe contener al menos una mayúscula, una minúscula y un número'
-    )
-    .required('La contraseña es requerida'),
-  password2: yup
-    .string()
-    .oneOf([yup.ref('password1'), null], 'Las contraseñas deben coincidir')
-    .required('Confirma tu contraseña'),
-});
-
-const RegisterForm = ({ onSwitchToLogin, onSuccess }) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { register: registerUser, googleLogin, loading } = useAuth();
-  
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
-    resolver: yupResolver(registerSchema),
+const RegisterForm = ({ onSuccess }) => {
+  const { register } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    first_name: '',
+    last_name: '',
+    password1: '',
+    password2: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Nuevo estado
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const onSubmit = async (data) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (formData.password1 !== formData.password2) {
+      setError('Las contraseñas no coinciden');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password1.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await registerUser(data);
-      toast.success('¡Cuenta creada exitosamente! Bienvenido/a');
-      reset();
+      await register(formData);
       if (onSuccess) onSuccess();
-    } catch (error) {
-      toast.error(error.message || 'Error al crear la cuenta');
+    } catch (err) {
+      const msg = err.response?.data?.error || 
+                  err.response?.data?.detail || 
+                  err.response?.data?.email?.[0] ||
+                  'Error al crear la cuenta. Intenta nuevamente.';
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      await googleLogin(credentialResponse.credential);
-      toast.success('¡Cuenta creada con Google!');
-      if (onSuccess) onSuccess();
-    } catch (error) {
-      toast.error(error.message || 'Error al registrar con Google');
-    }
-  };
-
-  const handleGoogleError = () => {
-    toast.error('Error al registrar con Google');
-  };
+  const inputClasses = "w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#60AB90]/20 focus:border-[#60AB90] transition-all placeholder:text-slate-400";
 
   return (
-    <div className="w-full max-w-md mx-auto p-1">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-4">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#FF8025] to-[#E65C00] rounded-xl flex items-center justify-center">
-            <Sparkles className="w-6 h-6 text-white" />
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-r-xl text-sm mb-4 animate-in fade-in slide-in-from-top-2">
+          <p className="font-bold">Oops!</p>
+          <p>{error}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">Nombre</label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleChange}
+              required
+              className={inputClasses}
+              placeholder="Tu nombre"
+            />
           </div>
         </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-          Únete a Yonna Akademia
-        </h2>
-        <p className="text-gray-600 text-sm sm:text-base">
-          Comienza tu viaje aprendiendo Wayuunaiki
-        </p>
+
+        <div>
+          <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">Apellido</label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input
+              type="text"
+              name="last_name"
+              value={formData.last_name}
+              onChange={handleChange}
+              required
+              className={inputClasses}
+              placeholder="Tu apellido"
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Nombre"
-            type="text"
-            placeholder="Tu nombre"
-            error={errors.first_name?.message}
-            {...register('first_name')}
-            icon={<User size={20} className="text-gray-400" />}
-          />
-          
-          <Input
-            label="Apellido"
-            type="text"
-            placeholder="Tu apellido"
-            error={errors.last_name?.message}
-            {...register('last_name')}
-            icon={<User size={20} className="text-gray-400" />}
-          />
-        </div>
-
-        <Input
-          label="Correo electrónico"
-          type="email"
-          placeholder="tu@email.com"
-          error={errors.email?.message}
-          {...register('email')}
-          icon={<Mail size={20} className="text-gray-400" />}
-        />
-        
-        <div className="space-y-4">
-          <div className="relative">
-            <Input
-              label="Contraseña"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="••••••••"
-              error={errors.password1?.message}
-              {...register('password1')}
-              icon={<Lock size={20} className="text-gray-400" />}
-              className="pr-10"
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-
-          <div className="relative">
-            <Input
-              label="Confirmar Contraseña"
-              type={showConfirmPassword ? 'text' : 'password'}
-              placeholder="••••••••"
-              error={errors.password2?.message}
-              {...register('password2')}
-              icon={<Lock size={20} className="text-gray-400" />}
-              className="pr-10"
-            />
-            <button
-              type="button"
-              className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-start space-x-3 text-sm">
-          <input
-            type="checkbox"
-            className="rounded border-gray-300 text-[#FF8025] focus:ring-[#FF8025] mt-0.5"
-            required
-          />
-          <span className="text-gray-600 text-left">
-            Acepto los{' '}
-            <button type="button" className="text-[#FF8025] hover:text-[#E65C00] font-medium">
-              Términos de servicio
-            </button>{' '}
-            y la{' '}
-            <button type="button" className="text-[#FF8025] hover:text-[#E65C00] font-medium">
-              Política de privacidad
-            </button>
-          </span>
-        </div>
-
-        <Button
-          type="submit"
-          variant="primary"
-          size="large"
-          loading={loading}
-          className="w-full py-3 text-base font-semibold"
-        >
-          Crear Cuenta
-        </Button>
-      </form>
-
-      {/* Separator */}
-      <div className="mt-6">
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">Correo Electrónico</label>
         <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-white text-gray-500">O regístrate con</span>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            theme="outline"
-            size="large"
-            text="signup_with"
-            shape="rectangular"
-            width="100%"
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className={inputClasses}
+            placeholder="tu@email.com"
           />
         </div>
       </div>
 
-      {/* Switch to Login */}
-      <div className="mt-6 text-center">
-        <p className="text-gray-600 text-sm">
-          ¿Ya tienes cuenta?{' '}
+      {/* Contraseña 1 */}
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">Contraseña</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password1"
+            value={formData.password1}
+            onChange={handleChange}
+            required
+            className={`${inputClasses} pr-10`}
+            placeholder="Mínimo 6 caracteres"
+          />
           <button
             type="button"
-            onClick={onSwitchToLogin}
-            className="text-[#FF8025] hover:text-[#E65C00] font-semibold transition-colors"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
           >
-            Inicia Sesión
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
-        </p>
+        </div>
       </div>
-    </div>
+
+      {/* Contraseña 2 */}
+      <div>
+        <label className="block text-sm font-bold text-slate-700 mb-1.5 ml-1">Confirmar Contraseña</label>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type={showConfirmPassword ? 'text' : 'password'}
+            name="password2"
+            value={formData.password2}
+            onChange={handleChange}
+            required
+            className={`${inputClasses} pr-10`}
+            placeholder="Repite tu contraseña"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+          >
+            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-[#60AB90] hover:bg-[#4da385] disabled:bg-slate-300 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#60AB90]/20 flex items-center justify-center gap-2 mt-6 transform active:scale-[0.98]"
+      >
+        {loading ? <Loader2 className="animate-spin" /> : <ArrowRight size={20} />}
+        {loading ? 'Creando cuenta...' : 'Crear Cuenta Gratis'}
+      </button>
+    </form>
   );
 };
 
