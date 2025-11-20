@@ -691,8 +691,8 @@ Estudiante de Ingeniería de Sistemas
 Universidad de La Guajira
 
 - GitHub: [@ivnmtz09](https://github.com/ivnmtz09)
-- Email: ivanjosemartinez09@gmail.com
-- LinkedIn: [Iván Martínez](https://linkedin.com/in/ivan-martinez)
+- Email: ivanjmm09@gmail.com
+- Email: ijesusmartinez@uniguajira.edu.co
 
 ---
 

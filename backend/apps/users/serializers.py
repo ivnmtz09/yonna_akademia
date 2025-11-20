@@ -2,22 +2,49 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Profile
+from .models import Profile # Importamos el modelo Profile
 
 User = get_user_model()
 
 
 # ------------------------------
-# SERIALIZER DE USUARIO
+# SERIALIZER DE PERFIL (Modelo Profile)
+# ------------------------------
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        # Campos que SÍ están en Profile (avatar, telefono, gustos, etc.)
+        fields = [
+            'avatar', 'telefono', 'gustos', 
+            'fecha_nacimiento', 'localidad',
+        ]
+        read_only_fields = fields
+
+
+# ------------------------------
+# SERIALIZER DE USUARIO (USADO POR /api/auth/me/, /profile/, /users/)
 # ------------------------------
 class UserSerializer(serializers.ModelSerializer):
+    # CRÍTICO: Anidamos el perfil. Usamos source='perfil' (related_name) 
+    # y el nombre 'profile' para que coincida con el user_model.dart de Flutter.
+    profile = ProfileSerializer(source='perfil', read_only=True) 
+    
+    # Campo de solo lectura para el nombre completo
+    full_name = serializers.CharField(source='get_full_name', read_only=True)
+
     class Meta:
         model = User
         fields = [
-            "id", "email", "username", "role", "bio",
-            "level", "xp", "first_name", "last_name"
+            "id", "email", "role",
+            "level", "xp", # <--- CRÍTICO para progreso en Flutter
+            "first_name", "last_name",
+            "bio", # <--- MANTENEMOS BIO AQUÍ (está en el modelo User)
+            "full_name",
+            "date_joined",
+            "last_login",
+            "profile" # <--- Incluimos el objeto Profile anidado
         ]
-        read_only_fields = ["id", "level", "xp"]
+        read_only_fields = ["id", "level", "xp", "role", "date_joined", "last_login", "full_name"]
 
 
 # ------------------------------
@@ -39,27 +66,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        # El campo 'username' está en tu modelo, por lo que lo creamos aquí
+        username = f'{validated_data["first_name"]} {validated_data["last_name"]}'.strip()
+        
         user = User.objects.create(
             email=validated_data["email"],
             first_name=validated_data["first_name"],
             last_name=validated_data["last_name"],
-            username=f'{validated_data["first_name"]} {validated_data["last_name"]}',
-            role="user",  # Nuevo rol por defecto
+            username=username, # Agregamos username
+            role="user", 
         )
         user.set_password(validated_data["password1"])
         user.save()
         return user
-
-
-# ------------------------------
-# SERIALIZER DE PERFIL
-# ------------------------------
-class ProfileSerializer(serializers.ModelSerializer):
-    usuario = UserSerializer(read_only=True)
-
-    class Meta:
-        model = Profile
-        fields = "__all__"
 
 
 # ------------------------------
@@ -85,17 +104,18 @@ class LoginSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = validated_data["user"]
         refresh = RefreshToken.for_user(user)
-        return {
+        
+        # Usamos UserSerializer para obtener todos los campos (incluido 'profile') de forma segura
+        user_data = UserSerializer(user).data
+        
+        response_data = {
             "refresh": str(refresh),
             "access": str(refresh.access_token),
-            "id": user.id,
-            "email": user.email,
-            "role": user.role,
-            "level": user.level,
-            "xp": user.xp,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
         }
+        # Fusionamos los datos del usuario con los tokens
+        response_data.update(user_data) 
+        
+        return response_data
 
 
 # ------------------------------
@@ -112,7 +132,14 @@ class XPUpdateSerializer(serializers.Serializer):
     def save(self, **kwargs):
         user = self.context["request"].user
         xp_amount = self.validated_data["xp_amount"]
-        user.add_xp(xp_amount)
+        
+        # Llamamos al método add_xp del modelo User (asumiendo que existe)
+        if hasattr(user, 'add_xp') and callable(user.add_xp):
+            user.add_xp(xp_amount)
+        else:
+             user.xp += xp_amount
+             user.save()
+        
         return user
 
 

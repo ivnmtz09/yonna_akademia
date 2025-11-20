@@ -3,7 +3,6 @@ import { contentService } from '../../services/contentService';
 import toast from 'react-hot-toast';
 import { 
   Film, 
-  Eye, 
   CheckCircle, 
   Star, 
   Trash2, 
@@ -30,11 +29,13 @@ const ContentTable = () => {
       setError('');
       const data = await contentService.getAllMedia();
       
-      // --- CORRECCIÓN AQUÍ ---
-      // Verificamos si viene paginado (data.results) o si es una lista directa
+      // --- CORRECCIÓN CRÍTICA DE PAGINACIÓN ---
+      // Si Django envía paginación, los datos reales están en 'results'
       const items = data.results ? data.results : data;
       
+      // Aseguramos que sea un array antes de guardarlo
       setContent(Array.isArray(items) ? items : []);
+      
     } catch (err) {
       setError('Error al conectar con el servidor.');
       console.error('Error fetching content:', err);
@@ -88,7 +89,7 @@ const ContentTable = () => {
   if (loading) {
     return (
       <div className="p-12 flex flex-col items-center justify-center text-slate-400">
-         <div className="loading-spinner mb-4"></div>
+         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#60AB90] mb-4"></div>
          <p>Cargando biblioteca...</p>
       </div>
     );
@@ -112,8 +113,17 @@ const ContentTable = () => {
         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
           <FileText className="text-slate-400" /> Biblioteca Multimedia
         </h2>
-        <div className="bg-brand-light text-brand-dark px-3 py-1 rounded-full text-sm font-bold">
-          {content.length} archivos
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={fetchContent}
+            className="p-2 text-slate-400 hover:text-[#60AB90] hover:bg-green-50 rounded-lg transition-colors"
+            title="Recargar lista"
+          >
+            <RefreshCw size={18} />
+          </button>
+          <div className="bg-green-50 text-[#2D6B53] px-3 py-1 rounded-full text-sm font-bold">
+            {content.length} archivos
+          </div>
         </div>
       </div>
 

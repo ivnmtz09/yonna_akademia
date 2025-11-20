@@ -3,20 +3,20 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+
+# Importaciones locales
 from .serializers import (
     RegisterSerializer,
     UserSerializer,
-    ProfileSerializer,
+    ProfileSerializer, # Necesaria para la actualización
     LoginSerializer,
     XPUpdateSerializer,
     UserRoleUpdateSerializer,
 )
-from .models import Profile
-from .google_auth import google_authenticate
+from .google_auth import google_authenticate # Asumimos que esta función existe
 from .permissions import IsAdmin, IsAdminOrModerator
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
 
 User = get_user_model()
 
@@ -40,23 +40,71 @@ class LoginView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        tokens = serializer.save()
-        return Response(tokens)
+        # Retorna el diccionario con tokens y datos de usuario (incluido 'profile')
+        response_data = serializer.save() 
+        return Response(response_data)
 
 
 # ------------------------------
-# PERFIL
+# PERFIL (GET/PUT/PATCH /api/auth/profile/)
 # ------------------------------
 class ProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = ProfileSerializer
+    # Usamos UserSerializer para la lectura y respuesta
+    serializer_class = UserSerializer 
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        return self.request.user.perfil
+        # Devuelve el objeto User actual
+        return self.request.user
+    
+    # Manejo de actualización (PUT/PATCH)
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        
+        # 1. Separar datos de User y datos de Profile
+        user_data = {}
+        profile_data = {}
+        
+        # Identificar qué campos pertenecen a User vs Profile
+        user_fields = [f.name for f in User._meta.fields]
+        profile_fields = [f.name for f in user.perfil._meta.fields]
+
+        for key, value in request.data.items():
+            if key in user_fields:
+                user_data[key] = value
+            elif key in profile_fields:
+                profile_data[key] = value
+
+        # 2. Actualizar User (si hay datos)
+        if user_data:
+            user_serializer = UserSerializer(user, data=user_data, partial=True)
+            user_serializer.is_valid(raise_exception=True)
+            user_serializer.save()
+        
+        # 3. Actualizar Profile (si hay datos)
+        if profile_data:
+            profile = user.perfil # Usamos el related_name 'perfil'
+            profile_serializer = ProfileSerializer(profile, data=profile_data, partial=True)
+            profile_serializer.is_valid(raise_exception=True)
+            profile_serializer.save()
+
+        # 4. Devolver el objeto de usuario completo y actualizado
+        return Response(UserSerializer(user).data)
 
 
 # ------------------------------
-# DETALLE DE USUARIO
+# USUARIO ACTUAL (GET /api/auth/me/)
+# ------------------------------
+class CurrentUserView(generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+# ------------------------------
+# DETALLE DE USUARIO (Para /users/<id>/)
 # ------------------------------
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
@@ -65,16 +113,16 @@ class UserDetailView(generics.RetrieveAPIView):
 
 
 # ------------------------------
-# LISTA DE USUARIOS (solo admin/moderator)
+# LISTA DE USUARIOS (Para /api/auth/users/)
 # ------------------------------
 class UserListView(generics.ListAPIView):
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('-date_joined') 
     serializer_class = UserSerializer
     permission_classes = [IsAdminOrModerator]
 
 
 # ------------------------------
-# ACTUALIZAR ROL DE USUARIO (solo admin)
+# ACTUALIZAR ROL DE USUARIO (Para /users/<id>/role/)
 # ------------------------------
 class UserRoleUpdateView(generics.UpdateAPIView):
     queryset = User.objects.all()
@@ -92,6 +140,7 @@ class AddXPView(APIView):
         serializer = XPUpdateSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        
         return Response(
             {
                 "message": "XP actualizada correctamente.",
@@ -103,38 +152,31 @@ class AddXPView(APIView):
 
 
 # ------------------------------
-# AUTENTICACIÓN CON GOOGLE
+# AUTENTICACIÓN CON GOOGLE 
 # ------------------------------
 class GoogleAuthView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        id_token_str = request.data.get("id_token")
-        if not id_token_str:
-            return Response(
-                {"error": "Token de Google no proporcionado."}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        token = request.data.get('id_token')
+        if not token:
+            return Response({"error": "Falta el token de Google."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user, tokens = google_authenticate(id_token_str)
-        if not user:
-            return Response(
-                {"error": "Token de Google inválido."}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        return Response(
-            {
-                "access": tokens["access"],
+        # Usamos la función importada de google_auth.py
+        user, tokens = google_authenticate(token)
+        
+        if user and tokens:
+            user_data = UserSerializer(user).data
+            response_data = {
                 "refresh": tokens["refresh"],
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "role": user.role,
-                "level": user.level,
-                "xp": user.xp,
-            },
-            status=status.HTTP_200_OK,
+                "access": tokens["access"],
+            }
+            response_data.update(user_data)
+            return Response(response_data, status=status.HTTP_200_OK)
+        
+        return Response(
+            {"error": "Autenticación de Google fallida o token inválido."}, 
+            status=status.HTTP_401_UNAUTHORIZED
         )
 
 
@@ -144,9 +186,7 @@ class GoogleAuthView(APIView):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
-    """
-    Cierra la sesión del usuario invalidando el refresh token.
-    """
+    """Cierra la sesión del usuario invalidando el refresh token."""
     try:
         refresh_token = request.data.get('refresh')
         
@@ -156,7 +196,6 @@ def logout_view(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Invalidar el token (requiere SimpleJWT con blacklist)
         token = RefreshToken(refresh_token)
         token.blacklist()
         
@@ -165,25 +204,16 @@ def logout_view(request):
             status=status.HTTP_200_OK
         )
     
-    except TokenError as e:
+    except TokenError:
         return Response(
             {"error": "Token inválido o ya expirado."},
             status=status.HTTP_400_BAD_REQUEST
         )
     
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error en logout_view: {str(e)}", exc_info=True)
+        print(f"Error en logout_view: {str(e)}") 
         
         return Response(
             {"error": "Error al cerrar sesión."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    
-class CurrentUserView(generics.RetrieveAPIView):
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_object(self):
-        return self.request.user

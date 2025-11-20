@@ -9,9 +9,11 @@ from .views import (
     UserListView,
     UserRoleUpdateView,
     logout_view,
+    UserDetailView,
 )
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
+# Definición de rutas específicas para el módulo de usuarios
 urlpatterns = [
     # Autenticación básica
     path("register/", RegisterView.as_view(), name="register"),
@@ -19,14 +21,15 @@ urlpatterns = [
     path("logout/", logout_view, name="logout"),
     
     # Perfil y usuario actual
-    path("profile/", ProfileView.as_view(), name="profile"),
-    path("me/", CurrentUserView.as_view(), name="current-user"),
+    path("profile/", ProfileView.as_view(), name="profile"), # GET y PUT/PATCH
+    path("me/", CurrentUserView.as_view(), name="current-user"), # GET
     
-    # Gestión de usuarios (nuevas - para admin/moderator)
-    path("users/", UserListView.as_view(), name="user-list"),
-    path("users/<int:pk>/role/", UserRoleUpdateView.as_view(), name="user-role-update"),
+    # --- GESTIÓN DE USUARIOS (Administración) ---
+    path("users/", UserListView.as_view(), name="user-list"), # GET (Admin/Moderator)
+    path("users/<int:pk>/", UserDetailView.as_view(), name="user-detail"), # GET
+    path("users/<int:pk>/role/", UserRoleUpdateView.as_view(), name="user-role-update"), # PATCH (Admin)
     
-    # Sistema de XP
+    # Sistema de XP/Niveles
     path("add-xp/", AddXPView.as_view(), name="add-xp"),
     
     # Autenticación JWT

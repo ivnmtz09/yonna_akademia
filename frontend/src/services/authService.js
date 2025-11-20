@@ -53,8 +53,11 @@ export const authService = {
   },
 
   // ACTUALIZAR PERFIL
-  updateProfile: async (profileData) => {
-    const response = await api.patch(`${API_URL}/api/auth/profile/`, profileData);
-    return response.data;
-  }
+  updateProfile: async (userData, profileData) => {
+      // Combina los datos de User y Profile
+      const payload = { ...userData, ...profileData }; 
+      // Envía la solicitud PATCH al endpoint que ya sabe cómo separarlos
+      const response = await api.patch('/api/auth/profile/', payload); 
+      return response.data;
+  },
 };

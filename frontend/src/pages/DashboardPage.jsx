@@ -8,11 +8,14 @@ import {
   UploadCloud, 
   Users, 
   ShieldAlert,
-  FileText
+  FileText,
+  LogOut,
+  Database,
+  ExternalLink
 } from 'lucide-react';
 
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('content');
 
   // Verificar permisos
@@ -68,22 +71,48 @@ const DashboardPage = () => {
           {/* Header Dashboard */}
           <div className="bg-brand-dark rounded-3xl p-8 mb-8 text-white shadow-lg relative overflow-hidden">
             <div className="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-            <div className="relative z-10 flex items-center gap-4">
-              <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-                <LayoutDashboard size={32} className="text-brand-orange" />
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                  <LayoutDashboard size={32} className="text-brand-orange" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold">Panel de Control</h1>
+                  <p className="text-brand-light/80 mt-1">
+                    Bienvenido, <span className="font-semibold text-white">{user.first_name}</span>. 
+                    Rol: <span className="uppercase text-xs font-bold bg-brand-orange px-2 py-0.5 rounded ml-1">{user.role}</span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold">Panel de Control</h1>
-                <p className="text-brand-light/80 mt-1">
-                  Bienvenido(a), <span className="font-semibold text-white">{user.first_name}</span>. 
-                  Tienes privilegios de <span className="uppercase text-xs font-bold bg-brand-orange px-2 py-0.5 rounded ml-1">{user.role}</span>
-                </p>
+              
+              <div className="flex flex-wrap gap-3">
+                {/* BOTÓN DJANGO ADMIN */}
+                {user.role === 'admin' && (
+                  <a 
+                    href="http://localhost:8000/admin/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#60AB90] hover:bg-[#4da385] rounded-lg text-sm font-bold transition-colors shadow-lg shadow-brand-green/20"
+                  >
+                    <Database size={16} />
+                    Admin Django
+                    <ExternalLink size={12} className="opacity-70" />
+                  </a>
+                )}
+
+                <button 
+                  onClick={logout}
+                  className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-medium transition-colors border border-white/10"
+                >
+                  <LogOut size={16} />
+                  Cerrar Sesión
+                </button>
               </div>
             </div>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-2 mb-6 flex flex-wrap gap-2">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-2 mb-6 flex flex-wrap gap-2 sticky top-4 z-30">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -105,7 +134,7 @@ const DashboardPage = () => {
           </div>
 
           {/* Main Content Area */}
-          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px] p-6">
+          <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[500px]">
             {renderContent()}
           </div>
         </div>
