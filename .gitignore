@@ -40,3 +40,28 @@ app.*.symbols
 google-services.json
 GoogleService-Info.plist
 .env
+
+# Python / Django
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+media/
+staticfiles/
+
+# Python / Django
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+db.sqlite3
+media/
+staticfiles/
+
+backend/.env
+frontend/.env

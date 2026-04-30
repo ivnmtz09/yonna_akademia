@@ -88,7 +88,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
-ROOT_URLCONF = "backend.urls"
+ROOT_URLCONF = "config.urls"
 
 # =========================
 # CORS
@@ -134,8 +134,8 @@ TEMPLATES = [
 # =========================
 # WSGI / ASGI
 # =========================
-WSGI_APPLICATION = "backend.wsgi.application"
-ASGI_APPLICATION = "backend.asgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
 
 # =========================
 # Base de datos
