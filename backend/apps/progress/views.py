@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Q, Count, Sum, F
 from django.shortcuts import get_object_or_404
 from datetime import datetime, timedelta
+from drf_spectacular.utils import extend_schema
 
 from .models import Progress, GlobalProgress
 from .serializers import (
@@ -52,6 +53,7 @@ class GlobalProgressView(generics.RetrieveAPIView):
         return global_progress
 
 
+@extend_schema(tags=["Progreso"], request=ProgressUpdateSerializer, responses={200: {"type": "object"}})
 class UpdateProgressView(APIView):
     """Fuerza la actualización del progreso."""
     permission_classes = [permissions.IsAuthenticated]
@@ -80,6 +82,7 @@ class UpdateProgressView(APIView):
             })
 
 
+@extend_schema(tags=["Progreso"], responses=LeaderboardSerializer(many=True))
 class LeaderboardView(APIView):
     """Tabla de clasificación de usuarios."""
     permission_classes = [permissions.IsAuthenticated]
@@ -144,6 +147,7 @@ class LeaderboardView(APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=["Progreso"])
 class UserStatisticsView(APIView):
     """Estadísticas detalladas del usuario."""
     permission_classes = [permissions.IsAuthenticated]
@@ -193,6 +197,7 @@ class UserStatisticsView(APIView):
         return user_count + 1
 
 
+@extend_schema(tags=["Progreso"])
 class AdminProgressStatisticsView(APIView):
     """Estadísticas de progreso para administradores y moderadores."""
     permission_classes = [IsAdminOrModerator]

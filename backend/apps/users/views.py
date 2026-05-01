@@ -1,8 +1,10 @@
 from rest_framework import generics, permissions, status
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 
@@ -10,38 +12,49 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .serializers import (
     RegisterSerializer,
     UserSerializer,
-    ProfileSerializer, # Necesaria para la actualización
+    ProfileSerializer,
     LoginSerializer,
     XPUpdateSerializer,
     UserRoleUpdateSerializer,
 )
-from .google_auth import google_authenticate # Asumimos que esta función existe
+from .google_auth import google_authenticate
 from .permissions import IsAdmin, IsAdminOrModerator
 
 User = get_user_model()
 
 
+class AuthRateThrottle(AnonRateThrottle):
+    """
+    Throttle estricto para endpoints de autenticación.
+    Límite: 10 peticiones/minuto por IP (scope 'auth' en settings).
+    """
+    scope = "auth"
+
+
 # ------------------------------
 # REGISTRO
 # ------------------------------
+@extend_schema(tags=["Autenticación"])
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthRateThrottle]  # 10 req/min por IP
 
 
 # ------------------------------
 # LOGIN
 # ------------------------------
+@extend_schema(tags=["Autenticación"])
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthRateThrottle]  # 10 req/min por IP
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # Retorna el diccionario con tokens y datos de usuario (incluido 'profile')
-        response_data = serializer.save() 
+        response_data = serializer.save()
         return Response(response_data)
 
 
@@ -133,6 +146,7 @@ class UserRoleUpdateView(generics.UpdateAPIView):
 # ------------------------------
 # SUMAR XP
 # ------------------------------
+@extend_schema(tags=["Autenticación"])
 class AddXPView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -154,8 +168,10 @@ class AddXPView(APIView):
 # ------------------------------
 # AUTENTICACIÓN CON GOOGLE 
 # ------------------------------
+@extend_schema(tags=["Autenticación"])
 class GoogleAuthView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthRateThrottle]  # 10 req/min por IP
 
     def post(self, request):
         token = request.data.get('id_token')
@@ -183,6 +199,7 @@ class GoogleAuthView(APIView):
 # ------------------------------
 # LOGOUT
 # ------------------------------
+@extend_schema(tags=["Autenticación"], responses={200: {"type": "object"}})
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def logout_view(request):

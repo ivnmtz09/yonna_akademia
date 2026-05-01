@@ -5,6 +5,7 @@ from rest_framework import views, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.viewsets import ViewSet
+from drf_spectacular.utils import extend_schema
 
 from .models import XpHistory, UserStatistic, PlatformStatistic
 from .serializers import (
@@ -22,6 +23,7 @@ from apps.quizzes.models import Quiz, QuizAttempt
 from apps.progress.models import Progress, GlobalProgress
 
 
+@extend_schema(tags=["Estadísticas"])
 class StatsOverviewView(views.APIView):
     """
     Devuelve las estadísticas generales del usuario:
@@ -105,6 +107,7 @@ class StatsOverviewView(views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=["Estadísticas"])
 class XpHistoryView(views.APIView):
     """
     Devuelve el historial de XP del usuario.
@@ -136,6 +139,7 @@ class XpHistoryView(views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=["Estadísticas"])
 class LeaderboardView(views.APIView):
     """
     Tabla de clasificación de usuarios.
@@ -211,6 +215,7 @@ class LeaderboardView(views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=["Estadísticas"])
 class UserStatisticsView(views.APIView):
     """
     Estadísticas detalladas del usuario.
@@ -226,6 +231,7 @@ class UserStatisticsView(views.APIView):
         return Response(serializer.data)
 
 
+@extend_schema(tags=["Estadísticas"])
 class TimeSeriesStatsView(views.APIView):
     """
     Estadísticas de series de tiempo para el usuario.
@@ -313,6 +319,7 @@ class TimeSeriesStatsView(views.APIView):
         serializer = TimeSeriesStatSerializer(data, many=True)
         return Response(serializer.data)
 
+@extend_schema(tags=["Estadísticas"])
 class AdminStatisticsView(views.APIView):
     """
     Estadísticas de administración para la plataforma.

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
+from drf_spectacular.utils import extend_schema
 
 from .models import Notification
 from .serializers import NotificationSerializer, NotificationMarkReadSerializer
@@ -19,6 +20,7 @@ class NotificationListView(generics.ListAPIView):
         return Notification.objects.filter(user=self.request.user)
 
 
+@extend_schema(tags=["Notificaciones"], responses={200: {"type": "object", "properties": {"unread_count": {"type": "integer"}}}})
 class UnreadNotificationCountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -30,6 +32,7 @@ class UnreadNotificationCountView(APIView):
         return Response({"unread_count": count})
 
 
+@extend_schema(tags=["Notificaciones"], request=NotificationMarkReadSerializer, responses={200: {"type": "object"}})
 class MarkNotificationsReadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -51,6 +54,7 @@ class MarkNotificationsReadView(APIView):
         })
 
 
+@extend_schema(tags=["Notificaciones"], responses={200: {"type": "object"}})
 class MarkAllNotificationsReadView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

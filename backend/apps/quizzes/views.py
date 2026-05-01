@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q, Count, Avg, F
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 
 from .models import Quiz, Question, QuizAttempt
 from .serializers import (
@@ -105,6 +106,7 @@ class UpdateQuizView(generics.UpdateAPIView):
         return Quiz.objects.all()
 
 
+@extend_schema(tags=["Quizzes"], request=SubmitQuizSerializer, responses=QuizAttemptSerializer)
 class SubmitQuizView(APIView):
     """Permite al usuario enviar sus respuestas a un quiz."""
     permission_classes = [permissions.IsAuthenticated]
@@ -158,6 +160,7 @@ class QuizAttemptsView(generics.ListAPIView):
         return QuizAttempt.objects.filter(quiz_id=quiz_id).select_related('user')
 
 
+@extend_schema(tags=["Quizzes"], responses=QuizStatisticsSerializer)
 class QuizStatisticsView(APIView):
     """Estadísticas de quizzes (solo admin/moderator)."""
     permission_classes = [IsAdminOrModerator]
