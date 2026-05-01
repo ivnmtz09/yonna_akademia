@@ -32,9 +32,8 @@ LOGOUT_REDIRECT_URL = "/"
 # =========================
 # Django Allauth / REST Auth
 # =========================
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
 ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 ACCOUNT_EMAIL_VERIFICATION = "none"
@@ -56,6 +55,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "dj_rest_auth",
     "dj_rest_auth.registration",
     "allauth",
@@ -64,7 +64,8 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "corsheaders",
     "channels",
-    'rest_framework_simplejwt.token_blacklist',
+    "drf_spectacular",
+    "storages",
 
     # Apps del proyecto
     "apps.users",
@@ -74,6 +75,8 @@ INSTALLED_APPS = [
     "apps.progress",
     "apps.notifications",
     "apps.stats",
+    "apps.gamification",
+    "apps.vocabulary",
 ]
 
 MIDDLEWARE = [
@@ -100,7 +103,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://192.168.1.4:8080",  # conexión Flutter local
+    "http://192.168.1.4:8080",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
 ]
 CORS_ALLOWED_HEADERS = [
     "accept", "accept-encoding", "authorization", "content-type",
@@ -118,7 +123,7 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  # Agregado para futuras plantillas
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -152,21 +157,87 @@ DATABASES = {
 }
 
 # =========================
-# Django Channels (sin Redis)
+# Redis: Canal de WebSockets
 # =========================
+REDIS_URL = config("REDIS_URL", default="redis://localhost:6379")
+
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
     },
 }
 
 # =========================
-# DRF + JWT
+# Redis: Caché de Django
+# =========================
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {
+            "db": "1",  # Base de datos separada de channels
+        },
+        "KEY_PREFIX": "yonna",
+        "TIMEOUT": 300,  # 5 minutos por defecto
+    }
+}
+
+# =========================
+# Almacenamiento: S3 (producción) / Local (desarrollo)
+# =========================
+USE_S3 = config("USE_S3", default=False, cast=bool)
+
+if USE_S3:
+    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="us-east-1")
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+    AWS_DEFAULT_ACL = None  # Heredar del bucket (política pública/privada)
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_QUERYSTRING_AUTH = False  # URLs públicas sin firma
+
+    # Archivos estáticos
+    STATIC_LOCATION = "static"
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{STATIC_LOCATION}/"
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "location": "media",
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                "location": STATIC_LOCATION,
+                "default_acl": "public-read",
+            },
+        },
+    }
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+else:
+    STATIC_URL = "/static/"
+    STATIC_ROOT = BASE_DIR / "staticfiles"
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+
+# =========================
+# DRF + JWT + Throttling
 # =========================
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",  # Para el admin
+        "rest_framework.authentication.SessionAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
@@ -178,9 +249,22 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
-        "rest_framework.parsers.MultiPartParser",  # Para subida de archivos
+        "rest_framework.parsers.MultiPartParser",
         "rest_framework.parsers.FormParser",
     ],
+    # --- Throttling global ---
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/minute",
+        "user": "300/minute",
+        # Throttle personalizado para autenticación
+        "auth": "10/minute",
+    },
+    # --- Esquema OpenAPI ---
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Solo en desarrollo mostrar el browsable API
@@ -206,18 +290,46 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # =========================
+# drf-spectacular (OpenAPI)
+# =========================
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Yonna Akademia API",
+    "DESCRIPTION": (
+        "API REST para la plataforma gamificada de aprendizaje del idioma Wayuunaiki. "
+        "Incluye módulos de cursos, quizzes, gamificación, vocabulario y notificaciones en tiempo real."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "CONTACT": {"name": "Yonna Akademia Dev Team"},
+    "LICENSE": {"name": "Proprietary"},
+    # Agrupa los endpoints por app
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SORT_OPERATIONS": False,
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+        "displayRequestDuration": True,
+    },
+    "ENUM_GENERATE_CHOICE_DESCRIPTION": True,
+    # Seguridad: JWT Bearer en Swagger UI
+    "SECURITY": [{"BearerAuth": []}],
+    "COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
+}
+
+# =========================
 # Configuración general
 # =========================
 LANGUAGE_CODE = "es-es"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
-
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
-
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -226,23 +338,37 @@ AUTH_USER_MODEL = "users.User"
 # =========================
 # Configuración de archivos multimedia
 # =========================
-FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50MB
 
 # =========================
-# Logging (opcional para desarrollo)
+# Logging
 # =========================
-if DEBUG:
-    LOGGING = {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'handlers': {
-            'console': {
-                'class': 'logging.StreamHandler',
-            },
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{levelname}] {asctime} {module} {message}",
+            "style": "{",
         },
-        'root': {
-            'handlers': ['console'],
-            'level': 'INFO',
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
-    }
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG" if DEBUG else "INFO",
+    },
+    "loggers": {
+        "django.db.backends": {
+            "handlers": ["console"],
+            # Cambia a "DEBUG" solo cuando necesites inspeccionar queries SQL
+            "level": "WARNING",
+            "propagate": False,
+        },
+    },
+}
