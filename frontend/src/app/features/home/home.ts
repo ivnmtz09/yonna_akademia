@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-home',
   standalone: true,
+  imports: [LucideAngularModule],
   template: `
     <main class="max-w-7xl mx-auto px-8 py-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
       <div class="flex flex-col items-start">
@@ -18,7 +20,7 @@ import { Component } from '@angular/core';
         </p>
         <div class="flex items-center gap-4 w-full">
           <button class="bg-brand-orange text-white px-8 py-3.5 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2">
-            Crear Cuenta <span class="text-xl">→</span>
+            Crear Cuenta <lucide-icon name="arrow-right" class="w-5 h-5"></lucide-icon>
           </button>
           <button class="bg-white border-2 border-gray-100 text-gray-800 px-8 py-3.5 rounded-xl font-bold hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm">
             Ingresar
@@ -27,8 +29,8 @@ import { Component } from '@angular/core';
       </div>
       <div class="flex justify-center relative">
          <div class="absolute inset-0 bg-brand-light-green rounded-full blur-3xl opacity-50 scale-90"></div>
-         <div class="relative w-[450px] h-[450px] flex items-center justify-center text-[12rem] z-10 animate-bounce-slow">
-            🐐
+         <div class="relative w-[450px] h-[450px] flex items-center justify-center z-10 animate-bounce-slow">
+            <img src="assets/mascot/saludo.png" alt="Mascota" class="w-full max-w-[300px] h-auto object-contain z-10">
          </div>
       </div>
     </main>
