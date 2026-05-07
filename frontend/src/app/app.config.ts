@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection, importProvidersFrom } from '@angular/core';
-import { LucideAngularModule, Home, BookOpen, Smartphone, ArrowRight } from 'lucide-angular';
+import { LucideAngularModule, Home, BookOpen, Smartphone, ArrowRight, X, Menu } from 'lucide-angular';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
@@ -15,6 +15,6 @@ export const appConfig: ApplicationConfig = {
     ),
     // Usamos 127.0.0.1 para evitar problemas de resolución de DNS con Java
     { provide: BASE_PATH, useValue: 'http://127.0.0.1:8000' },
-    importProvidersFrom(LucideAngularModule.pick({ Home, BookOpen, Smartphone, ArrowRight }))
+    importProvidersFrom(LucideAngularModule.pick({ Home, BookOpen, Smartphone, ArrowRight, X, Menu }))
   ]
 };

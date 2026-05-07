@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+import { UiService } from '../../core/services/ui.service';
 
 @Component({
   selector: 'app-home',
@@ -19,10 +20,10 @@ import { LucideAngularModule } from 'lucide-angular';
           Explora nuestra colección multimedia. Documentales, fotografías y escritos que preservan la esencia y sabiduría de nuestro pueblo.
         </p>
         <div class="flex items-center gap-4 w-full">
-          <button class="bg-brand-orange text-white px-8 py-3.5 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2">
+          <button (click)="ui.openRegisterModal()" class="bg-brand-orange text-white px-8 py-3.5 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2">
             Crear Cuenta <lucide-icon name="arrow-right" class="w-5 h-5"></lucide-icon>
           </button>
-          <button class="bg-white border-2 border-gray-100 text-gray-800 px-8 py-3.5 rounded-xl font-bold hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm">
+          <button (click)="ui.openLoginModal()" class="bg-white border-2 border-gray-100 text-gray-800 px-8 py-3.5 rounded-xl font-bold hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm">
             Ingresar
           </button>
         </div>
@@ -43,4 +44,6 @@ import { LucideAngularModule } from 'lucide-angular';
     }
   `]
 })
-export class Home {}
+export class Home {
+  ui = inject(UiService);
+}

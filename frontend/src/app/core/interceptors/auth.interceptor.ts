@@ -1,15 +1,16 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { TokenService } from '../services/token.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // If you are using a different storage (like sessionStorage or a service),
-  // update the token retrieval logic here.
-  const token = localStorage.getItem('access_token');
+  const tokenService = inject(TokenService);
+  const token = tokenService.getAccessToken();
 
   if (token) {
     const clonedReq = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
     return next(clonedReq);
   }

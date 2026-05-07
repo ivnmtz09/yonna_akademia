@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { UiService } from '../../../core/services/ui.service';
 
 @Component({
   selector: 'app-navbar',
@@ -20,14 +21,19 @@ import { LucideAngularModule } from 'lucide-angular';
           <lucide-icon name="book-open" class="w-5 h-5"></lucide-icon> Cultura Wayuu
         </a>
       </div>
-      <div class="flex items-center gap-6">
-        <lucide-icon name="smartphone" class="w-5 h-5 text-gray-400 hidden md:block"></lucide-icon>
-        <button class="text-gray-900 font-semibold hover:text-brand-green transition-colors">Ingresar</button>
-        <button class="bg-brand-green text-white font-semibold px-6 py-2.5 rounded-full hover:bg-opacity-90 transition-all shadow-md">
+      <div class="hidden md:flex items-center gap-6">
+        <lucide-icon name="smartphone" class="w-5 h-5 text-gray-400"></lucide-icon>
+        <button (click)="ui.openLoginModal()" class="text-gray-900 font-semibold hover:text-brand-green transition-colors">Ingresar</button>
+        <button (click)="ui.openRegisterModal()" class="bg-brand-green text-white font-semibold px-6 py-2.5 rounded-full hover:bg-opacity-90 transition-all shadow-md">
           Crear Cuenta
         </button>
       </div>
+      <button (click)="ui.openMobileMenu()" class="md:hidden p-2 text-gray-600 hover:text-brand-green transition-colors">
+        <lucide-icon name="menu" class="w-6 h-6"></lucide-icon>
+      </button>
     </nav>
   `
 })
-export class Navbar {}
+export class Navbar {
+  ui = inject(UiService);
+}
