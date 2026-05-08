@@ -58,7 +58,7 @@ export class AuthService {
    * Realiza el logout del usuario
    */
   logout(): void {
-    this.tokenService.clearTokens();
+    this.tokenService.logout();
     this.isAuthenticated.set(false);
     this.currentUser.set(null);
   }

@@ -1,7 +1,9 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { UiService } from '../../../core/services/ui.service';
+import { TokenService } from '../../../core/services/token.service';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   selector: 'app-navbar',
@@ -22,11 +24,21 @@ import { UiService } from '../../../core/services/ui.service';
         </a>
       </div>
       <div class="hidden md:flex items-center gap-6">
-        <lucide-icon name="smartphone" class="w-5 h-5 text-gray-400"></lucide-icon>
-        <button (click)="ui.openLoginModal()" class="text-gray-900 font-semibold hover:text-brand-green transition-colors">Ingresar</button>
-        <button (click)="ui.openRegisterModal()" class="bg-brand-green text-white font-semibold px-6 py-2.5 rounded-full hover:bg-opacity-90 transition-all shadow-md">
-          Crear Cuenta
-        </button>
+        @if (tokenService.isAuthenticated()) {
+          <button routerLink="/dashboard" class="text-brand-green font-semibold hover:text-opacity-80 transition-colors flex items-center gap-2">
+            <lucide-icon name="layout-dashboard" class="w-5 h-5"></lucide-icon>
+            Ir al Dashboard
+          </button>
+          <button (click)="logout()" class="text-red-500 font-semibold px-4 py-2 rounded-full hover:bg-red-50 transition-all">
+            Cerrar Sesión
+          </button>
+        } @else {
+          <lucide-icon name="smartphone" class="w-5 h-5 text-gray-400"></lucide-icon>
+          <button (click)="ui.openLoginModal()" class="text-gray-900 font-semibold hover:text-brand-green transition-colors">Ingresar</button>
+          <button (click)="ui.openRegisterModal()" class="bg-brand-green text-white font-semibold px-6 py-2.5 rounded-full hover:bg-opacity-90 transition-all shadow-md">
+            Crear Cuenta
+          </button>
+        }
       </div>
       <button (click)="ui.openMobileMenu()" class="md:hidden p-2 text-gray-600 hover:text-brand-green transition-colors">
         <lucide-icon name="menu" class="w-6 h-6"></lucide-icon>
@@ -36,4 +48,12 @@ import { UiService } from '../../../core/services/ui.service';
 })
 export class Navbar {
   ui = inject(UiService);
+  tokenService = inject(TokenService);
+  authService = inject(AuthService);
+  router = inject(Router);
+
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
+  }
 }

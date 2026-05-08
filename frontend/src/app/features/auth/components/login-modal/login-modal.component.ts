@@ -1,6 +1,7 @@
 import { Component, inject, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { UiService } from '../../../../core/services/ui.service';
 import { AuthService } from '../../../../core/services/auth';
@@ -36,11 +37,11 @@ import { takeUntil } from 'rxjs/operators';
             <p class="text-gray-500 font-medium">Ingresa a tu cuenta para continuar</p>
           </div>
 
-          @if (errorMessage) {
+          @if (loginError) {
             <div
               class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center"
             >
-              {{ errorMessage }}
+              {{ loginError }}
             </div>
           }
 
@@ -103,7 +104,7 @@ import { takeUntil } from 'rxjs/operators';
 
             <button
               type="submit"
-              [disabled]="loginForm.invalid || isLoading"
+              [disabled]="isLoading"
               class="w-full bg-brand-green text-white font-bold py-4 rounded-xl hover:bg-opacity-90 hover:shadow-lg hover:shadow-brand-green/20 transition-all mt-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               @if (isLoading) {
@@ -153,10 +154,11 @@ export class LoginModalComponent implements OnDestroy {
   ui = inject(UiService);
   auth = inject(AuthService);
   fb = inject(FormBuilder);
+  router = inject(Router);
 
   loginForm: FormGroup;
   isLoading = false;
-  errorMessage = '';
+  loginError = '';
 
   private destroy$ = new Subject<void>();
 
@@ -186,13 +188,26 @@ export class LoginModalComponent implements OnDestroy {
    * Maneja el envío del formulario
    */
   onSubmit(): void {
+    // Forzar lectura del DOM en caso de que el autocompletado no haya disparado el evento de Angular
+    const emailInput = document.querySelector('input[formControlName="email"]') as HTMLInputElement;
+    const passwordInput = document.querySelector('input[formControlName="password"]') as HTMLInputElement;
+
+    if (emailInput?.value && !this.loginForm.value.email) {
+      this.loginForm.patchValue({ email: emailInput.value });
+    }
+    if (passwordInput?.value && !this.loginForm.value.password) {
+      this.loginForm.patchValue({ password: passwordInput.value });
+    }
+
+    console.log('Datos enviados a Django:', this.loginForm.value);
+
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
     }
 
     this.isLoading = true;
-    this.errorMessage = '';
+    this.loginError = '';
 
     this.auth
       .login(this.loginForm.value)
@@ -202,11 +217,16 @@ export class LoginModalComponent implements OnDestroy {
           this.isLoading = false;
           // Cerrar el modal tras el login exitoso
           this.ui.closeLoginModal();
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           this.isLoading = false;
           // Mostrar mensaje de error específico del servidor
-          this.errorMessage = error.message || 'Credenciales incorrectas o ha ocurrido un error.';
+          if (error.status === 401) {
+            this.loginError = 'Credenciales incorrectas. Por favor, verifica tu correo y contraseña.';
+          } else {
+            this.loginError = error.message || 'Credenciales incorrectas o ha ocurrido un error.';
+          }
 
           // Log para debugging (remover en producción)
           console.error('Login error:', error);
@@ -235,7 +255,7 @@ export class LoginModalComponent implements OnDestroy {
    */
   private resetForm(): void {
     this.loginForm.reset();
-    this.errorMessage = '';
+    this.loginError = '';
     this.isLoading = false;
   }
 

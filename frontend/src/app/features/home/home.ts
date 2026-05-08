@@ -1,11 +1,13 @@
 import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { UiService } from '../../core/services/ui.service';
+import { TokenService } from '../../core/services/token.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, RouterLink],
   template: `
     <main class="max-w-7xl mx-auto px-8 py-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
       <div class="flex flex-col items-start">
@@ -20,12 +22,18 @@ import { UiService } from '../../core/services/ui.service';
           Explora nuestra colección multimedia. Documentales, fotografías y escritos que preservan la esencia y sabiduría de nuestro pueblo.
         </p>
         <div class="flex items-center gap-4 w-full">
-          <button (click)="ui.openRegisterModal()" class="bg-brand-orange text-white px-8 py-3.5 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2">
-            Crear Cuenta <lucide-icon name="arrow-right" class="w-5 h-5"></lucide-icon>
-          </button>
-          <button (click)="ui.openLoginModal()" class="bg-white border-2 border-gray-100 text-gray-800 px-8 py-3.5 rounded-xl font-bold hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm">
-            Ingresar
-          </button>
+          @if (tokenService.isAuthenticated()) {
+            <button routerLink="/dashboard" class="bg-brand-green text-white px-8 py-3.5 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-green-500/30 flex items-center gap-2">
+              Continuar Aprendiendo <lucide-icon name="arrow-right" class="w-5 h-5"></lucide-icon>
+            </button>
+          } @else {
+            <button (click)="ui.openRegisterModal()" class="bg-brand-orange text-white px-8 py-3.5 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-orange-500/30 flex items-center gap-2">
+              Crear Cuenta <lucide-icon name="arrow-right" class="w-5 h-5"></lucide-icon>
+            </button>
+            <button (click)="ui.openLoginModal()" class="bg-white border-2 border-gray-100 text-gray-800 px-8 py-3.5 rounded-xl font-bold hover:border-gray-300 hover:bg-gray-50 transition-all shadow-sm">
+              Ingresar
+            </button>
+          }
         </div>
       </div>
       <div class="flex justify-center relative">
@@ -46,4 +54,5 @@ import { UiService } from '../../core/services/ui.service';
 })
 export class Home {
   ui = inject(UiService);
+  tokenService = inject(TokenService);
 }

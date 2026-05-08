@@ -1,5 +1,6 @@
 import { Component, inject, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import {
   FormBuilder,
   FormGroup,
@@ -241,6 +242,7 @@ export class RegisterModalComponent implements OnDestroy {
   ui = inject(UiService);
   auth = inject(AuthService);
   fb = inject(FormBuilder);
+  router = inject(Router);
 
   registerForm: FormGroup;
   isLoading = false;
@@ -313,6 +315,7 @@ export class RegisterModalComponent implements OnDestroy {
               next: () => {
                 setTimeout(() => {
                   this.ui.closeRegisterModal();
+                  this.router.navigate(['/dashboard']);
                 }, 1000);
               },
               error: () => {

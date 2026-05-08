@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
@@ -9,6 +9,16 @@ export class TokenService {
 
   private tokenSignal = signal<string | null>(this.getAccessToken());
   public readonly token = this.tokenSignal.asReadonly();
+  
+  // Computed signal to reactively know if user is authenticated
+  public readonly isAuthenticated = computed(() => !!this.tokenSignal() && !this.isTokenExpired(this.tokenSignal()!));
+
+  /**
+   * Cierra la sesión limpiando los tokens
+   */
+  logout(): void {
+    this.clearTokens();
+  }
 
   /**
    * Almacena los tokens de forma segura (en este caso, localStorage)
