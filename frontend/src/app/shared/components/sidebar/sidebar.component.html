@@ -1,0 +1,90 @@
+<!-- Mobile Overlay -->
+@if (ui.isSidebarOpen() && isMobile()) {
+  <div class="fixed inset-0 bg-black/50 dark:bg-black/70 z-[45]" (click)="closeMobileSidebar()"></div>
+}
+
+<!-- Sidebar Desktop: fixed below navbar -->
+<aside class="hidden md:flex fixed top-16 left-0 w-64 h-[calc(100vh-4rem)] z-40 bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-800 flex-col overflow-y-auto">
+  <!-- Sidebar Content -->
+  <div class="flex flex-col h-full p-4">
+    <!-- Navigation Links -->
+    <nav class="flex-grow space-y-2 mt-2">
+      <a routerLink="/dashboard" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        <lucide-icon name="layout-dashboard" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Dashboard</span>
+      </a>
+      <a routerLink="/diccionario" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        <lucide-icon name="book-open" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Diccionario</span>
+      </a>
+      <a routerLink="/cursos" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        <lucide-icon name="graduation-cap" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Cursos</span>
+      </a>
+      <a routerLink="/dashboard/perfil" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+        <lucide-icon name="user" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Perfil</span>
+      </a>
+    </nav>
+  </div>
+</aside>
+
+<!-- Sidebar Mobile: drawer style -->
+<aside class="fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 bg-white dark:bg-slate-900 md:hidden"
+       [class.translate-x-0]="ui.isSidebarOpen()"
+       [class.-translate-x-full]="!ui.isSidebarOpen()">
+  <div class="flex flex-col h-full p-4">
+    <!-- Mobile Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-brand-green rounded-lg flex items-center justify-center">
+          <span class="text-white font-bold text-lg">Y</span>
+        </div>
+        <span class="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Yonna</span>
+      </div>
+      <button (click)="closeMobileSidebar()" class="p-2 text-gray-600 dark:text-gray-300 hover:text-brand-green">
+        <lucide-icon name="x" class="w-6 h-6"></lucide-icon>
+      </button>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-grow space-y-2">
+      <a routerLink="/dashboard" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+         (click)="closeMobileSidebar()">
+        <lucide-icon name="layout-dashboard" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Dashboard</span>
+      </a>
+      <a routerLink="/diccionario" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+         (click)="closeMobileSidebar()">
+        <lucide-icon name="book-open" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Diccionario</span>
+      </a>
+      <a routerLink="/cursos" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+         (click)="closeMobileSidebar()">
+        <lucide-icon name="graduation-cap" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Cursos</span>
+      </a>
+      <a routerLink="/dashboard/perfil" routerLinkActive="active"
+         class="flex items-center gap-3 py-3 px-4 rounded-xl text-gray-700 dark:text-gray-300
+                hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+         (click)="closeMobileSidebar()">
+        <lucide-icon name="user" class="w-5 h-5"></lucide-icon>
+        <span class="font-medium">Perfil</span>
+      </a>
+    </nav>
+  </div>
+</aside>

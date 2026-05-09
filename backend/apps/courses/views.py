@@ -111,7 +111,7 @@ class AvailableCoursesView(generics.ListAPIView):
         qs = _optimized_course_queryset(user=user)
         if user.role not in ("admin", "moderator"):
             qs = qs.filter(level_required__lte=user.level)
-        return qs
+        return qs.order_by('id')
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

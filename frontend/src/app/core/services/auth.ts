@@ -33,11 +33,14 @@ export class AuthService {
           // Decodificar y guardar información del usuario
           const decoded = this.tokenService.decodeToken(response.access);
           if (decoded) {
-            this.currentUser.set({
-              id: decoded.user_id || decoded.sub,
-              email: decoded.email,
-              username: decoded.username,
-            });
+              this.currentUser.set({
+                id: decoded.user_id || decoded.sub,
+                email: decoded.email,
+                username: decoded.username,
+                role: decoded.role || 'user',
+                level: decoded.level || 1,
+                xp: decoded.xp || 0,
+              });
           }
         }
       }),

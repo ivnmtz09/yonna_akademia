@@ -30,17 +30,20 @@ export class Register {
 
     this.isLoading = true;
     this.errorMsg = '';
+    this.registerForm.disable();
 
     const data: RegisterRequest = this.registerForm.getRawValue() as any;
 
     this.authService.register(data).subscribe({
       next: () => {
         this.isLoading = false;
+        this.registerForm.enable();
         // Optionally auto-login or switch to login
         this.onSwitchToLogin.emit();
       },
       error: (err) => {
         this.isLoading = false;
+        this.registerForm.enable();
         this.errorMsg = 'Error al crear la cuenta. Verifica los datos.';
         console.error(err);
       }

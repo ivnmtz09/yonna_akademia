@@ -29,16 +29,19 @@ export class Login {
 
     this.isLoading = true;
     this.errorMsg = '';
+    this.loginForm.disable();
 
     const credentials: LoginRequest = this.loginForm.getRawValue();
 
     this.authService.login(credentials).subscribe({
       next: () => {
         this.isLoading = false;
+        this.loginForm.enable();
         this.onClose.emit(); // Cierra el modal exitosamente
       },
       error: (err) => {
         this.isLoading = false;
+        this.loginForm.enable();
         this.errorMsg = 'Credenciales incorrectas. Intenta nuevamente.';
         console.error(err);
       }

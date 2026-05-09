@@ -1,0 +1,49 @@
+Actúa como Arquitecto Full-Stack Senior experto en Django 5 y Angular 21. El frontend de "Yonna Akademia" tiene un layout estable, pero actualmente las vistas de Diccionario, Cursos y Dashboard utilizan datos estáticos.
+
+Tu objetivo es conectar estos componentes del frontend con la API real del backend, analizando primero la estructura de Django para garantizar consistencia en los modelos de datos.
+
+TAREAS A IMPLEMENTAR:
+
+ANÁLISIS DE LA API (BACKEND A FRONTEND):
+
+Inspecciona los archivos en backend/apps/vocabulary/, backend/apps/courses/ y backend/apps/gamification/ para entender la estructura exacta de las respuestas JSON.
+
+Revisa la carpeta frontend/src/app/api/ para identificar los servicios TypeScript que ya fueron generados por OpenAPI (ej. VocabularyService, CoursesService).
+
+INTEGRACIÓN DEL DICCIONARIO WAYUU:
+
+Abre src/app/features/dictionary/dictionary.component.ts.
+
+Inyecta el servicio de la API correspondiente al vocabulario.
+
+Reemplaza el array estático de palabras por una llamada HTTP real al endpoint del backend.
+
+Utiliza Angular Signals o toSignal (de @angular/core/rxjs-interop) para manejar el estado de los datos, el estado de carga (loading) y los errores.
+
+INTEGRACIÓN DE CURSOS:
+
+Abre src/app/features/courses/courses.component.ts.
+
+Inyecta el servicio de la API correspondiente a los cursos.
+
+Obtén la lista de cursos disponibles y renderízala dinámicamente en el HTML utilizando el control de flujo @for.
+
+Muestra el título del curso, la descripción y el progreso si el usuario está inscrito.
+
+DATOS REALES EN EL DASHBOARD:
+
+Abre src/app/features/dashboard/dashboard.component.ts.
+
+Asegúrate de que el componente consuma los datos reales de XP, Nivel y Rol del usuario desde el backend (ya sea desde el token JWT decodificado o haciendo una petición al endpoint del perfil).
+
+Si existe un endpoint de Leaderboard en /api/gamification/, intégralo para mostrar los mejores usuarios en el panel.
+
+REGLAS TÉCNICAS ESTRICTAS:
+
+No rompas el diseño actual de Tailwind CSS.
+
+Maneja correctamente las suscripciones de RxJS. Evita memory leaks utilizando el pipe takeUntilDestroyed o consumiendo los observables directamente en el template con el pipe async o convirtiéndolos a Signals.
+
+Si el backend requiere tokens de autenticación para estas rutas, asegúrate de que el interceptor HTTP existente ya los esté enviando; no dupliques lógica de headers.
+
+Reporta cualquier discrepancia que encuentres entre los modelos de Django y los servicios generados de Angular.

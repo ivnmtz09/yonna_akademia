@@ -40,24 +40,24 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
   template: `
     @if (ui.isRegisterModalOpen()) {
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
         (click)="closeModal()"
       >
         <div
-          class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative mx-4 transform transition-all border border-gray-100 max-h-[90vh] overflow-y-auto"
+          class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative mx-4 transform transition-all border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto"
           (click)="$event.stopPropagation()"
         >
           <button
             (click)="closeModal()"
             class="absolute right-5 top-5 p-2 bg-gray-50 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all"
-            [disabled]="isLoading"
+            [ngClass]="{'pointer-events-none opacity-50': isLoading}"
           >
             <lucide-icon name="x" class="w-5 h-5"></lucide-icon>
           </button>
 
           <div class="text-center mb-6 mt-2">
-            <h2 class="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">Crear Cuenta</h2>
-            <p class="text-gray-500 font-medium">Únete a Yonna Akademia hoy mismo</p>
+            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight">Crear Cuenta</h2>
+            <p class="text-gray-500 dark:text-gray-400 font-medium">Únete a Yonna Akademia hoy mismo</p>
           </div>
 
           @if (errorMessage) {
@@ -77,19 +77,18 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5"
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5"
                 >Nombre</label
               >
               <input
                 type="text"
                 formControlName="first_name"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all"
+                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 [ngClass]="{
                   'border-red-300 focus:border-red-500 focus:ring-red-200':
                     isFieldInvalid('first_name'),
                 }"
                 placeholder="Ej. María"
-                [disabled]="isLoading"
               />
               @if (isFieldInvalid('first_name')) {
                 <p class="text-red-500 text-xs mt-1.5 font-medium">
@@ -98,19 +97,18 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
               }
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5"
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5"
                 >Apellido</label
               >
               <input
                 type="text"
                 formControlName="last_name"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all"
+                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 [ngClass]="{
                   'border-red-300 focus:border-red-500 focus:ring-red-200':
                     isFieldInvalid('last_name'),
                 }"
                 placeholder="Ej. Rodríguez"
-                [disabled]="isLoading"
               />
               @if (isFieldInvalid('last_name')) {
                 <p class="text-red-500 text-xs mt-1.5 font-medium">
@@ -119,18 +117,17 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
               }
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5"
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5"
                 >Correo Electrónico</label
               >
               <input
                 type="email"
                 formControlName="email"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all"
+                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 [ngClass]="{
                   'border-red-300 focus:border-red-500 focus:ring-red-200': isFieldInvalid('email'),
                 }"
                 placeholder="tu@email.com"
-                [disabled]="isLoading"
               />
               @if (isFieldInvalid('email')) {
                 <p class="text-red-500 text-xs mt-1.5 font-medium">
@@ -139,17 +136,16 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
               }
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Contraseña</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Contraseña</label>
               <input
                 type="password"
                 formControlName="password1"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all"
+                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 [ngClass]="{
                   'border-red-300 focus:border-red-500 focus:ring-red-200':
                     isFieldInvalid('password1'),
                 }"
                 placeholder="Mínimo 6 caracteres"
-                [disabled]="isLoading"
               />
               @if (isFieldInvalid('password1')) {
                 @if (registerForm.get('password1')?.hasError('required')) {
@@ -162,19 +158,18 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
               }
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5"
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5"
                 >Confirmar Contraseña</label
               >
               <input
                 type="password"
                 formControlName="password2"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all"
+                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-orange/30 focus:border-brand-orange transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 [ngClass]="{
                   'border-red-300 focus:border-red-500 focus:ring-red-200':
                     isFieldInvalid('password2'),
                 }"
                 placeholder="Repite tu contraseña"
-                [disabled]="isLoading"
               />
               @if (
                 isFieldInvalid('password2') &&
@@ -192,8 +187,8 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 
             <button
               type="submit"
-              [disabled]="registerForm.invalid || isLoading || successMessage !== ''"
-              class="w-full bg-brand-orange text-white font-bold py-4 rounded-xl hover:bg-opacity-90 hover:shadow-lg hover:shadow-brand-orange/20 transition-all mt-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              [ngClass]="{'pointer-events-none opacity-50': registerForm.invalid || isLoading || successMessage !== ''}"
+              class="w-full bg-brand-orange text-white font-bold py-4 rounded-xl hover:bg-opacity-90 hover:shadow-lg hover:shadow-brand-orange/20 transition-all mt-6 text-lg flex items-center justify-center gap-2"
             >
               @if (isLoading) {
                 <svg
@@ -223,16 +218,16 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
             </button>
           </form>
 
-          <p class="text-center text-sm text-gray-600 mt-8 font-medium">
-            ¿Ya tienes una cuenta?
-            <button
-              (click)="openLogin()"
-              class="text-brand-green font-bold hover:underline ml-1"
-              [disabled]="isLoading"
-            >
-              Ingresa aquí
-            </button>
-          </p>
+            <p class="text-center text-sm text-gray-600 dark:text-gray-300 mt-8 font-medium">
+              ¿Ya tienes una cuenta?
+              <button
+                (click)="openLogin()"
+                class="text-brand-green font-bold hover:underline ml-1"
+                [ngClass]="{'pointer-events-none opacity-50': isLoading}"
+              >
+                Ingresa aquí
+              </button>
+            </p>
         </div>
       </div>
     }
@@ -282,6 +277,7 @@ export class RegisterModalComponent implements OnDestroy {
     }
 
     this.isLoading = true;
+    this.registerForm.disable();
     this.errorMessage = '';
     this.successMessage = '';
 
@@ -292,6 +288,7 @@ export class RegisterModalComponent implements OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
+          this.registerForm.enable();
           this.errorMessage =
             err.error?.detail ||
             err.error?.first_name?.[0] ||
@@ -305,6 +302,7 @@ export class RegisterModalComponent implements OnDestroy {
       )
       .subscribe((res) => {
         if (res) {
+          this.registerForm.enable();
           this.isLoading = false;
           this.successMessage = '¡Cuenta creada con éxito! Iniciando sesión...';
 

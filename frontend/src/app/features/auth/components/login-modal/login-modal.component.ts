@@ -15,26 +15,26 @@ import { takeUntil } from 'rxjs/operators';
   template: `
     @if (ui.isLoginModalOpen()) {
       <div
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
         (click)="closeModal()"
       >
         <div
-          class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative mx-4 transform transition-all border border-gray-100"
+          class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative mx-4 transform transition-all border border-gray-100 dark:border-slate-700"
           (click)="$event.stopPropagation()"
         >
           <button
             (click)="closeModal()"
             class="absolute right-5 top-5 p-2 bg-gray-50 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all"
-            [disabled]="isLoading"
+            [ngClass]="{'pointer-events-none opacity-50': isLoading}"
           >
             <lucide-icon name="x" class="w-5 h-5"></lucide-icon>
           </button>
 
           <div class="text-center mb-6 mt-2">
-            <h2 class="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
+            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight">
               Bienvenido de nuevo
             </h2>
-            <p class="text-gray-500 font-medium">Ingresa a tu cuenta para continuar</p>
+            <p class="text-gray-500 dark:text-gray-400 font-medium">Ingresa a tu cuenta para continuar</p>
           </div>
 
           @if (loginError) {
@@ -47,18 +47,17 @@ import { takeUntil } from 'rxjs/operators';
 
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5"
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5"
                 >Correo Electrónico</label
               >
               <input
                 type="email"
                 formControlName="email"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green transition-all"
+                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 [ngClass]="{
                   'border-red-300 focus:border-red-500 focus:ring-red-200': isFieldInvalid('email'),
                 }"
                 placeholder="tu@email.com"
-                [disabled]="isLoading"
               />
               @if (isFieldInvalid('email')) {
                 <p class="text-red-500 text-xs mt-1.5 font-medium">
@@ -71,17 +70,16 @@ import { takeUntil } from 'rxjs/operators';
               }
             </div>
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">Contraseña</label>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Contraseña</label>
               <input
                 type="password"
                 formControlName="password"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green transition-all"
+                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                 [ngClass]="{
                   'border-red-300 focus:border-red-500 focus:ring-red-200':
                     isFieldInvalid('password'),
                 }"
                 placeholder="••••••••"
-                [disabled]="isLoading"
               />
               @if (isFieldInvalid('password')) {
                 <p class="text-red-500 text-xs mt-1.5 font-medium">La contraseña es requerida.</p>
@@ -92,10 +90,9 @@ import { takeUntil } from 'rxjs/operators';
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  class="w-4 h-4 rounded text-brand-green border-gray-300 focus:ring-brand-green"
-                  [disabled]="isLoading"
+                  class="w-4 h-4 rounded text-brand-green border-gray-300 dark:border-slate-600 focus:ring-brand-green bg-gray-50 dark:bg-slate-800"
                 />
-                <span class="text-sm text-gray-600 font-medium">Recordarme</span>
+                <span class="text-sm text-gray-600 dark:text-gray-300 font-medium">Recordarme</span>
               </label>
               <a href="#" class="text-sm text-brand-green hover:underline font-bold"
                 >¿Olvidaste tu clave?</a
@@ -104,8 +101,8 @@ import { takeUntil } from 'rxjs/operators';
 
             <button
               type="submit"
-              [disabled]="isLoading"
-              class="w-full bg-brand-green text-white font-bold py-4 rounded-xl hover:bg-opacity-90 hover:shadow-lg hover:shadow-brand-green/20 transition-all mt-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              [ngClass]="{'pointer-events-none opacity-50': isLoading}"
+              class="w-full bg-brand-green text-white font-bold py-4 rounded-xl hover:bg-opacity-90 hover:shadow-lg hover:shadow-brand-green/20 transition-all mt-6 text-lg flex items-center justify-center gap-2"
             >
               @if (isLoading) {
                 <svg
@@ -135,16 +132,16 @@ import { takeUntil } from 'rxjs/operators';
             </button>
           </form>
 
-          <p class="text-center text-sm text-gray-600 mt-8 font-medium">
-            ¿No tienes una cuenta?
-            <button
-              (click)="openRegister()"
-              class="text-brand-orange font-bold hover:underline ml-1"
-              [disabled]="isLoading"
-            >
-              Regístrate aquí
-            </button>
-          </p>
+            <p class="text-center text-sm text-gray-600 dark:text-gray-300 mt-8 font-medium">
+              ¿No tienes una cuenta?
+              <button
+                (click)="openRegister()"
+                class="text-brand-orange font-bold hover:underline ml-1"
+                [ngClass]="{'pointer-events-none opacity-50': isLoading}"
+              >
+                Regístrate aquí
+              </button>
+            </p>
         </div>
       </div>
     }
@@ -207,6 +204,7 @@ export class LoginModalComponent implements OnDestroy {
     }
 
     this.isLoading = true;
+    this.loginForm.disable();
     this.loginError = '';
 
     this.auth
@@ -215,20 +213,18 @@ export class LoginModalComponent implements OnDestroy {
       .subscribe({
         next: () => {
           this.isLoading = false;
-          // Cerrar el modal tras el login exitoso
+          this.loginForm.enable();
           this.ui.closeLoginModal();
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           this.isLoading = false;
-          // Mostrar mensaje de error específico del servidor
+          this.loginForm.enable();
           if (error.status === 401) {
             this.loginError = 'Credenciales incorrectas. Por favor, verifica tu correo y contraseña.';
           } else {
             this.loginError = error.message || 'Credenciales incorrectas o ha ocurrido un error.';
           }
-
-          // Log para debugging (remover en producción)
           console.error('Login error:', error);
         },
       });

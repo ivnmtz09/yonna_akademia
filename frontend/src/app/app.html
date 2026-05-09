@@ -1,5 +1,21 @@
-<app-navbar></app-navbar>
-<router-outlet></router-outlet>
-<app-login-modal></app-login-modal>
-<app-register-modal></app-register-modal>
-<app-mobile-menu></app-mobile-menu>
+<div class="flex flex-col min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-gray-100">
+  <app-navbar></app-navbar>
+
+  <!-- Main layout with sidebar and content -->
+  <div class="flex flex-grow pt-16">
+    <!-- Sidebar for authenticated users (desktop only, mobile handled in sidebar component) -->
+    @if (tokenService.isAuthenticated()) {
+      <app-sidebar></app-sidebar>
+    }
+
+    <!-- Main content area with proper margins -->
+    <main class="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto w-full"
+          [class.md:ml-64]="tokenService.isAuthenticated()">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Modals remain at the root level with highest z-index -->
+  <app-login-modal></app-login-modal>
+  <app-register-modal></app-register-modal>
+</div>
