@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Django](https://img.shields.io/badge/Django-5.2-green.svg)](https://www.djangoproject.com/)
-[![Angular](https://img.shields.io/badge/Angular-17+-dd0031.svg)](https://angular.dev/)
+[![Angular](https://img.shields.io/badge/Angular-21+-dd0031.svg)](https://angular.dev/)
 [![Flutter](https://img.shields.io/badge/Flutter-3.0-02569B.svg)](https://flutter.dev/)
 
 [Demo](#-demo) • [Características](#-características-principales) • [Instalación](#-instalación-local) • [Documentación](#-documentación-de-la-api-swagger) • [Contribuir](#-contribución)
@@ -39,10 +39,12 @@
 - **Almacenamiento**: Archivos locales / AWS S3 (django-storages)
 - **Documentación API**: OpenAPI 3.0 (drf-spectacular / Swagger)
 
-### **Frontend Web (En migración)**
-- **Framework**: Angular 17+ (Standalone Components)
-- **Estilos**: TailwindCSS 3
-- **Servicios HTTP**: Generados automáticamente vía OpenAPI Generator
+### **Frontend Web**
+- **Framework**: Angular 21+ (Standalone Components, Signals)
+- **Estilos**: TailwindCSS 3 + Lucide Icons
+- **Servicios HTTP**: Generados automáticamente vía OpenAPI Generator (typescript-angular)
+- **Estado**: Angular Signals con `takeUntilDestroyed` para RxJS
+- **Autenticación**: JWT con interceptor HTTP y guards de ruta
 
 ### **App Móvil (Futuro)**
 - **Framework**: Flutter 3.0+
@@ -73,6 +75,37 @@ backend/
 ├── staticfiles/            # 📁 Archivos estáticos compilados
 ├── requirements.txt        # 📦 Dependencias Python
 └── manage.py               # 🛠️ CLI de Django
+```
+
+## 🖥️ Arquitectura del Frontend (Angular 21+)
+
+```text
+frontend/
+├── src/app/
+│   ├── api/                    # 📡 Servicios generados por OpenAPI Generator
+│   │   ├── api/                # Servicios TypeScript (VocabularioService, CursosService, etc.)
+│   │   ├── model/              # Interfaces de datos (Course, VocabularyEntry, etc.)
+│   │   ├── configuration.ts    # Configuración de autenticación JWT
+│   │   └── api.base.service.ts # Clase base para todos los servicios
+│   │
+│   ├── core/                   # 🧠 Lógica compartida
+│   │   ├── guards/             # authGuard (protección de rutas)
+│   │   ├── interceptors/       # authInterceptor (inyección de token JWT)
+│   │   └── services/           # AuthService, TokenService, UiService
+│   │
+│   ├── features/               # 📄 Componentes de funcionalidad
+│   │   ├── home/               # Página de aterrizaje
+│   │   ├── dashboard/          # Panel de usuario (XP, nivel, leaderboard)
+│   │   ├── courses/            # Cursos disponibles e inscripciones
+│   │   ├── dictionary/         # Diccionario Wayuu-Español
+│   │   └── auth/               # Modales de login y registro
+│   │
+│   └── shared/                 # 🔄 Componentes reutilizables
+│       └── components/         # StatCardComponent, Navbar, etc.
+│
+├── tailwind.config.js          # 🎨 Configuración de TailwindCSS
+├── angular.json                # ⚙️ Configuración de Angular CLI
+└── package.json                # 📦 Dependencias
 ```
 
 ---
@@ -139,14 +172,32 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-### 3. Configuración del Frontend (Angular)
-*(Actualmente en proceso de inicialización de la arquitectura Angular)*
+### 3. Configuración del Frontend (Angular 21+)
 
 ```bash
 cd frontend
 npm install
 ng serve
 ```
+
+**Características del Frontend:**
+- **Standalone Components**: Sin NgModules, componentes autocontenidos con `@Component({ standalone: true })`.
+- **Angular Signals**: Estado reactivo con `signal()`, `computed()` y `toSignal()` desde `@angular/core/rxjs-interop`.
+- **Control de flujo integrado**: Uso de `@if`, `@for`, `@switch` en lugar de directivas estructurales.
+- **Servicios OpenAPI**: Toda la comunicación con el backend se realiza mediante servicios generados automáticamente desde la especificación OpenAPI.
+- **Autenticación JWT**: Interceptor HTTP que inyecta el token Bearer en cada petición, con guards de ruta para proteger rutas privadas.
+- **TailwindCSS**: Sistema de diseño utilitario con colores personalizados de marca (brand-green, brand-orange).
+- **Iconos Lucide**: Iconos SVG reactivos vía `lucide-angular`.
+- **Consumo de datos reales**: Dashboard, cursos y diccionario conectados a la API real del backend.
+
+**Scripts disponibles:**
+
+| Comando | Descripción |
+|---|---|
+| `ng serve` | Servidor de desarrollo en `http://localhost:4200` |
+| `ng build` | Compilación de producción |
+| `ng test` | Ejecución de pruebas unitarias |
+| `npm run generate-api` | Regenerar servicios desde OpenAPI (requiere backend corriendo) |
 
 ---
 
@@ -178,11 +229,16 @@ Una vez que el servidor esté corriendo, visita:
 - [x] Integración Redis (Caché y Channels) y S3
 - [x] Swagger / OpenAPI 3.0
 
-### v1.1 (MVP Frontend Angular) - En Progreso 🚧
-- [ ] Generación de servicios con OpenAPI Generator
-- [ ] Arquitectura Standalone Components
-- [ ] Integración TailwindCSS
-- [ ] Interfaces de Cursos y Gamificación
+### v1.1 (MVP Frontend Angular) - Completado ✅
+- [x] Migración de React a Angular 21+ con Standalone Components
+- [x] Generación de servicios con OpenAPI Generator (typescript-angular)
+- [x] Integración TailwindCSS + Lucide Icons
+- [x] Sistema de autenticación JWT (login, registro, guards, interceptor)
+- [x] Dashboard con datos reales (XP, nivel, leaderboard)
+- [x] Catálogo de cursos con inscripción y progreso
+- [x] Diccionario interactivo conectado a la API
+- [x] Manejo de estado con Angular Signals y DestroyRef
+- [x] Protección de rutas con authGuard
 
 ### v2.0 (App Móvil & IA) - Futuro 🔮
 - [ ] App móvil Flutter
