@@ -7,7 +7,8 @@ import { Observable, throwError } from 'rxjs';
 import { Login } from '../../api/model/login';
 import { Register } from '../../api/model/register';
 import { TokenService } from './token.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BASE_PATH } from '../../api';
 
 @Injectable({
   providedIn: 'root',
@@ -15,9 +16,38 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class AuthService {
   private apiAuth = inject(AutenticacinService);
   private tokenService = inject(TokenService);
+  private http = inject(HttpClient);
+  private basePath = inject(BASE_PATH);
 
   public isAuthenticated = signal<boolean>(this.tokenService.hasToken());
   public currentUser = signal<any>(null);
+
+  /**
+   * Realiza el login o registro mediante Google OAuth2 (id_token)
+   */
+  loginWithGoogle(idToken: string): Observable<any> {
+    return this.http.post<any>(`${this.basePath}/api/auth/google/`, { id_token: idToken }).pipe(
+      tap((response: any) => {
+        if (response && response.access) {
+          this.tokenService.setTokens(response.access, response.refresh);
+          this.isAuthenticated.set(true);
+
+          const decoded = this.tokenService.decodeToken(response.access);
+          if (decoded) {
+            this.currentUser.set({
+              id: decoded.user_id || decoded.sub,
+              email: decoded.email,
+              username: decoded.username || `${response.first_name || ''} ${response.last_name || ''}`.trim(),
+              role: decoded.role || response.role || 'user',
+              level: decoded.level || response.level || 1,
+              xp: decoded.xp || response.xp || 0,
+            });
+          }
+        }
+      }),
+      catchError((error) => this.handleError(error))
+    );
+  }
 
   /**
    * Realiza el login del usuario

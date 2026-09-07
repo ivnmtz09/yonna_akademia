@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideZoneChangeDetection, importProvidersFrom } from '@angular/core';
-import { LucideAngularModule, LayoutDashboard, Book, Languages, Trophy, User, LogOut, ArrowRight, ArrowLeft, Menu, X, Home, BookOpen, Smartphone, Sun, Moon, Monitor, Check, ChevronDown, PanelLeftClose, PanelLeftOpen, Flag, Clock, Award, Zap, Users, Facebook, Twitter, Instagram, GraduationCap, AlertTriangle, Search, BookX, SearchX, LoaderCircle, Volume2, FileText, ShieldCheck, Info, CircleAlert } from 'lucide-angular';
+import { LucideAngularModule, LayoutDashboard, Book, Languages, Trophy, User, LogOut, ArrowRight, ArrowLeft, Menu, X, Home, BookOpen, Smartphone, Sun, Moon, Monitor, Check, ChevronDown, PanelLeftClose, PanelLeftOpen, Flag, Clock, Award, Zap, Users, Facebook, Twitter, Instagram, GraduationCap, AlertTriangle, Search, BookX, SearchX, LoaderCircle, Volume2, FileText, ShieldCheck, Info, CircleAlert, Eye, EyeOff } from 'lucide-angular';
 import { provideRouter, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
@@ -22,6 +22,6 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authInterceptor])
     ),
     { provide: BASE_PATH, useValue: environment.apiUrl },
-    importProvidersFrom(LucideAngularModule.pick({ LayoutDashboard, Book, Languages, Trophy, User, LogOut, ArrowRight, ArrowLeft, Menu, X, Home, BookOpen, Smartphone, Sun, Moon, Monitor, Check, ChevronDown, PanelLeftClose, PanelLeftOpen, Flag, Clock, Award, Zap, Users, Facebook, Twitter, Instagram, GraduationCap, AlertTriangle, Search, BookX, SearchX, LoaderCircle, Volume2, FileText, ShieldCheck, Info, CircleAlert }))
+    importProvidersFrom(LucideAngularModule.pick({ LayoutDashboard, Book, Languages, Trophy, User, LogOut, ArrowRight, ArrowLeft, Menu, X, Home, BookOpen, Smartphone, Sun, Moon, Monitor, Check, ChevronDown, PanelLeftClose, PanelLeftOpen, Flag, Clock, Award, Zap, Users, Facebook, Twitter, Instagram, GraduationCap, AlertTriangle, Search, BookX, SearchX, LoaderCircle, Volume2, FileText, ShieldCheck, Info, CircleAlert, Eye, EyeOff }))
   ]
 };

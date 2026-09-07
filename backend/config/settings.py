@@ -157,33 +157,51 @@ DATABASES = {
 }
 
 # =========================
-# Redis: Canal de WebSockets
+# Redis / Caché de Django & WebSockets
 # =========================
 REDIS_URL = config("REDIS_URL", default="redis://localhost:6379")
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [REDIS_URL],
-        },
-    },
-}
+def _check_redis_connection(url):
+    try:
+        import redis
+        client = redis.from_url(url, socket_connect_timeout=1)
+        client.ping()
+        return True
+    except Exception:
+        return False
 
-# =========================
-# Redis: Caché de Django
-# =========================
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": REDIS_URL,
-        "OPTIONS": {
-            "db": "1",  # Base de datos separada de channels
+_REDIS_ACTIVE = _check_redis_connection(REDIS_URL)
+
+if _REDIS_ACTIVE:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
         },
-        "KEY_PREFIX": "yonna",
-        "TIMEOUT": 300,  # 5 minutos por defecto
     }
-}
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "KEY_PREFIX": "yonna",
+            "TIMEOUT": 300,
+        }
+    }
+else:
+    # Respaldo resiliente para desarrollo sin servicio de Redis activo
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "yonna-dev-cache",
+        }
+    }
 
 # =========================
 # Almacenamiento: S3 (producción) / Local (desarrollo)

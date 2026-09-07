@@ -71,7 +71,7 @@ class UserVocabularyProgressSerializer(serializers.ModelSerializer):
 class VocabularyCategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = VocabularyCategory.objects.all().order_by("order")
     serializer_class = VocabularyCategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
 
 @extend_schema(tags=["Vocabulario"])
@@ -81,7 +81,7 @@ class VocabularyEntryViewSet(viewsets.ModelViewSet):
     Soporta filtro por categoría, dificultad y búsqueda de texto.
     """
     serializer_class = VocabularyEntrySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["spanish_term", "wayuunaiki_translation"]
     ordering_fields = ["spanish_term", "difficulty", "created_at"]
@@ -132,7 +132,12 @@ class VocabularyEntryViewSet(viewsets.ModelViewSet):
         responses=UserVocabularyProgressSerializer,
         methods=["GET", "PATCH"],
     )
-    @action(detail=True, methods=["get", "patch"], url_path="my-progress")
+    @action(
+        detail=True,
+        methods=["get", "patch"],
+        url_path="my-progress",
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def my_progress(self, request, pk=None):
         entry = self.get_object()
         progress, _ = UserVocabularyProgress.objects.get_or_create(
