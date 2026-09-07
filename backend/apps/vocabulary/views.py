@@ -3,6 +3,7 @@ from rest_framework import serializers, viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.users.permissions import IsModeratorOrAdminOrReadOnly
 from .models import VocabularyCategory, VocabularyEntry, UserVocabularyProgress
 
 
@@ -30,6 +31,7 @@ class VocabularyEntrySerializer(serializers.ModelSerializer):
         source="category",
         write_only=True,
         required=False,
+        allow_null=True,
     )
     usage_examples = UsageExampleSerializer(many=True, required=False)
 
@@ -50,8 +52,9 @@ class VocabularyEntrySerializer(serializers.ModelSerializer):
             "is_featured",
             "is_active",
             "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["created_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class UserVocabularyProgressSerializer(serializers.ModelSerializer):
@@ -60,7 +63,7 @@ class UserVocabularyProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserVocabularyProgress
         fields = ["id", "entry", "mastery_level", "review_count", "next_review_at", "last_seen_at"]
-        read_only_fields = ["review_count", "last_seen_at"]
+        read_only_fields = ["id", "review_count", "last_seen_at"]
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -68,20 +71,21 @@ class UserVocabularyProgressSerializer(serializers.ModelSerializer):
 # ──────────────────────────────────────────────────────────────────────────────
 
 @extend_schema(tags=["Vocabulario"])
-class VocabularyCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class VocabularyCategoryViewSet(viewsets.ModelViewSet):
     queryset = VocabularyCategory.objects.all().order_by("order")
     serializer_class = VocabularyCategorySerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsModeratorOrAdminOrReadOnly]
 
 
 @extend_schema(tags=["Vocabulario"])
 class VocabularyEntryViewSet(viewsets.ModelViewSet):
     """
     CRUD de entradas del diccionario Wayuunaiki.
+    Solo moderadores y administradores pueden crear, modificar o eliminar entradas.
     Soporta filtro por categoría, dificultad y búsqueda de texto.
     """
     serializer_class = VocabularyEntrySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsModeratorOrAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["spanish_term", "wayuunaiki_translation"]
     ordering_fields = ["spanish_term", "difficulty", "created_at"]

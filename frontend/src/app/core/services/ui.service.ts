@@ -13,6 +13,7 @@ export class UiService {
   private readonly _themeMode = signal<ThemeMode>(this.getInitialTheme());
   private readonly _isDarkMode = signal<boolean>(false);
   private readonly _isSidebarExpanded = signal(false);
+  private readonly _isSidebarCollapsed = signal<boolean>(this.getInitialSidebarCollapsed());
 
   readonly isLoginModalOpen = this._isLoginModalOpen.asReadonly();
   readonly isRegisterModalOpen = this._isRegisterModalOpen.asReadonly();
@@ -21,6 +22,7 @@ export class UiService {
   readonly themeMode = this._themeMode.asReadonly();
   readonly isDarkMode = this._isDarkMode.asReadonly();
   readonly isSidebarExpanded = this._isSidebarExpanded.asReadonly();
+  readonly isSidebarCollapsed = this._isSidebarCollapsed.asReadonly();
 
   private mediaQueryListener?: (e: MediaQueryListEvent) => void;
 
@@ -114,6 +116,36 @@ export class UiService {
   }
   setSidebarExpanded(value: boolean) {
     this._isSidebarExpanded.set(value);
+  }
+
+  private getInitialSidebarCollapsed(): boolean {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('sidebar_collapsed') === 'true';
+    }
+    return false;
+  }
+
+  toggleSidebarCollapse(): void {
+    const next = !this._isSidebarCollapsed();
+    this._isSidebarCollapsed.set(next);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('sidebar_collapsed', String(next));
+      } catch {
+        // ignore localStorage error
+      }
+    }
+  }
+
+  setSidebarCollapsed(collapsed: boolean): void {
+    this._isSidebarCollapsed.set(collapsed);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('sidebar_collapsed', String(collapsed));
+      } catch {
+        // ignore localStorage error
+      }
+    }
   }
 
   private checkMobile(): boolean {

@@ -4,6 +4,7 @@ from .views import (
     QuizDetailView,
     CreateQuizView,
     UpdateQuizView,
+    DestroyQuizView,
     SubmitQuizView,
     UserAttemptsView,
     QuizAttemptsView,
@@ -20,6 +21,7 @@ urlpatterns = [
     # Gestión de quizzes (admin/moderator)
     path("create/", CreateQuizView.as_view(), name="create-quiz"),
     path("<int:pk>/update/", UpdateQuizView.as_view(), name="update-quiz"),
+    path("<int:pk>/delete/", DestroyQuizView.as_view(), name="delete-quiz"),
     
     # Intentos de quiz
     path("submit/", SubmitQuizView.as_view(), name="submit-quiz"),

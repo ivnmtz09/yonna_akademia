@@ -4,6 +4,7 @@ from .views import (
     CourseDetailView,
     CreateCourseView,
     UpdateCourseView,
+    DestroyCourseView,
     EnrollCourseView,
     UserEnrollmentsView,
     CourseEnrollmentsView,
@@ -19,6 +20,7 @@ urlpatterns = [
     # Gestión de cursos (admin/moderator)
     path("create/", CreateCourseView.as_view(), name="create-course"),
     path("<int:pk>/update/", UpdateCourseView.as_view(), name="update-course"),
+    path("<int:pk>/delete/", DestroyCourseView.as_view(), name="delete-course"),
     
     # Inscripciones
     path("enroll/", EnrollCourseView.as_view(), name="enroll-course"),

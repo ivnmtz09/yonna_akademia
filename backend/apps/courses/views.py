@@ -9,7 +9,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 
-from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator
+from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator, IsOwnerOrAdmin
 from apps.quizzes.models import Quiz, QuizAttempt
 
 from .models import Course, Enrollment
@@ -109,7 +109,7 @@ class AvailableCoursesView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = _optimized_course_queryset(user=user)
-        if user.role not in ("admin", "moderator"):
+        if not getattr(user, "is_moderator_or_admin", False):
             qs = qs.filter(level_required__lte=user.level)
         return qs.order_by('id')
 
@@ -146,14 +146,17 @@ class CreateCourseView(generics.CreateAPIView):
 
 @extend_schema(tags=["Cursos"])
 class UpdateCourseView(generics.UpdateAPIView):
-    """Actualizar curso existente."""
+    """Actualizar curso existente (Solo creador o administrador)."""
+    queryset = Course.objects.all()
     serializer_class = CreateCourseSerializer
-    permission_classes = [IsAdminOrModerator]
+    permission_classes = [IsOwnerOrAdmin]
 
-    def get_queryset(self):
-        if self.request.user.role == "moderator":
-            return Course.objects.filter(created_by=self.request.user)
-        return Course.objects.all()
+
+@extend_schema(tags=["Cursos"])
+class DestroyCourseView(generics.DestroyAPIView):
+    """Eliminar curso existente (Solo creador o administrador)."""
+    queryset = Course.objects.all()
+    permission_classes = [IsOwnerOrAdmin]
 
 
 @extend_schema(tags=["Cursos"])

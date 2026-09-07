@@ -34,14 +34,18 @@ class User(AbstractUser):
     username = models.CharField(_("nombre de usuario"), max_length=150, unique=False, blank=True, null=True)
     email = models.EmailField(_("correo electrónico"), unique=True)
 
-    # Nuevos roles simplificados
+    # Constantes y opciones de roles
+    ROLE_ADMIN = "admin"
+    ROLE_MODERATOR = "moderator"
+    ROLE_USER = "user"
+
     ROLE_CHOICES = (
-        ("admin", "Administrador"),
-        ("moderator", "Moderador"),
-        ("user", "Usuario"),
+        (ROLE_ADMIN, "Administrador"),
+        (ROLE_MODERATOR, "Moderador"),
+        (ROLE_USER, "Usuario"),
     )
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="user")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_USER)
     bio = models.TextField("biografía corta", blank=True, null=True)
 
     # Sistema de niveles con XP
@@ -81,18 +85,22 @@ class User(AbstractUser):
             self.level = new_level
             self.save(update_fields=["level"])
 
-    # Propiedades de conveniencia para verificar roles
+    # Propiedades de conveniencia para verificar roles jerárquicos
     @property
     def is_admin(self):
-        return self.role == "admin"
+        return bool(self.is_superuser or self.role == self.ROLE_ADMIN)
 
     @property
     def is_moderator(self):
-        return self.role == "moderator"
+        return self.role == self.ROLE_MODERATOR
+
+    @property
+    def is_moderator_or_admin(self):
+        return bool(self.is_admin or self.is_moderator)
 
     @property
     def is_regular_user(self):
-        return self.role == "user"
+        return self.role == self.ROLE_USER
 
 
 class Profile(models.Model):

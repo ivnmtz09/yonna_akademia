@@ -13,7 +13,7 @@ from .serializers import (
     SubmitQuizSerializer,
     QuizStatisticsSerializer,
 )
-from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator
+from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator, IsOwnerOrAdmin
 
 class AvailableQuizzesView(generics.ListAPIView):
     """Lista los quizzes disponibles para el usuario."""
@@ -23,7 +23,7 @@ class AvailableQuizzesView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         # Para admin/moderator ven todos los quizzes activos
-        if user.role in ['admin', 'moderator']:
+        if getattr(user, "is_moderator_or_admin", False):
             return Quiz.objects.filter(is_active=True).select_related('course')
         else:
             # Para usuarios regulares, solo quizzes de cursos en los que están inscritos
@@ -94,16 +94,16 @@ class CreateQuizView(generics.CreateAPIView):
 
 
 class UpdateQuizView(generics.UpdateAPIView):
-    """Actualizar quiz existente."""
+    """Actualizar quiz existente (Solo creador o administrador)."""
     serializer_class = CreateQuizSerializer
-    permission_classes = [IsAdminOrModerator]
+    permission_classes = [IsOwnerOrAdmin]
     queryset = Quiz.objects.all()
 
-    def get_queryset(self):
-        # Los moderadores solo pueden editar sus propios quizzes
-        if self.request.user.role == 'moderator':
-            return Quiz.objects.filter(created_by=self.request.user)
-        return Quiz.objects.all()
+
+class DestroyQuizView(generics.DestroyAPIView):
+    """Eliminar quiz existente (Solo creador o administrador)."""
+    queryset = Quiz.objects.all()
+    permission_classes = [IsOwnerOrAdmin]
 
 
 @extend_schema(tags=["Quizzes"], request=SubmitQuizSerializer, responses=QuizAttemptSerializer)
@@ -202,7 +202,7 @@ class CourseQuizzesView(generics.ListAPIView):
         user = self.request.user
         
         # Verificar que el usuario esté inscrito en el curso o sea admin/moderator
-        if user.role in ['admin', 'moderator']:
+        if getattr(user, "is_moderator_or_admin", False):
             return Quiz.objects.filter(course_id=course_id, is_active=True)
         else:
             from apps.courses.models import Enrollment

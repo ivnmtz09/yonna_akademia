@@ -17,7 +17,7 @@ from .serializers import (
     MediaViewSerializer,
     MediaStatisticsSerializer,
 )
-from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator
+from apps.users.permissions import IsAdmin, IsModerator, IsAdminOrModerator, IsOwnerOrAdmin
 
 
 class MediaContentViewSet(viewsets.ModelViewSet):
@@ -27,12 +27,17 @@ class MediaContentViewSet(viewsets.ModelViewSet):
     queryset = MediaContent.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsOwnerOrAdmin()]
+        return [permissions.IsAuthenticatedOrReadOnly()]
+
     def get_serializer_class(self):
         if self.action == 'create':
             return MediaContentCreateSerializer
         elif self.action in ['update', 'partial_update']:
             return MediaContentUpdateSerializer
-        elif self.request.user.role in ['admin', 'moderator']:
+        elif getattr(self.request.user, "is_moderator_or_admin", False):
             return MediaContentAdminSerializer
         return MediaContentSerializer
 
@@ -42,10 +47,10 @@ class MediaContentViewSet(viewsets.ModelViewSet):
             user = self.request.user
 
             # Filtros para usuarios no autenticados o regulares
-            if not user.is_authenticated or user.role == 'user':
+            if not user.is_authenticated or not getattr(user, "is_moderator_or_admin", False):
                 queryset = queryset.filter(is_approved=True, is_public=True)
             # Moderadores ven su contenido y contenido pendiente de aprobación
-            elif user.role == 'moderator':
+            elif getattr(user, "is_moderator", False):
                 queryset = queryset.filter(
                     Q(is_approved=True) | 
                     Q(uploaded_by=user) |
@@ -83,7 +88,7 @@ class MediaContentViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         # Si el usuario es Admin o Moderador, auto-aprobamos el contenido
-        if user.role in ['admin', 'moderator']:
+        if getattr(user, "is_moderator_or_admin", False):
             serializer.save(
                 uploaded_by=user,
                 is_approved=True,       # ¡Aprobado automático!
@@ -175,6 +180,11 @@ class MediaCollectionViewSet(viewsets.ModelViewSet):
     queryset = MediaCollection.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy', 'add_media', 'remove_media']:
+            return [IsOwnerOrAdmin()]
+        return [permissions.IsAuthenticatedOrReadOnly()]
+
     def get_serializer_class(self):
         if self.action == 'create':
             return MediaCollectionCreateSerializer
@@ -183,7 +193,7 @@ class MediaCollectionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = MediaCollection.objects.all()
         
-        if not self.request.user.is_authenticated or self.request.user.role == 'user':
+        if not self.request.user.is_authenticated or not getattr(self.request.user, "is_moderator_or_admin", False):
             queryset = queryset.filter(is_public=True)
         
         return queryset.select_related('created_by').prefetch_related('media_files')

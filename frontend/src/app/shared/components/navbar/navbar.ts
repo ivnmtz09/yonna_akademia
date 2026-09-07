@@ -37,12 +37,6 @@ import { CommonModule } from '@angular/common';
           <lucide-icon name="book-open" class="w-4 h-4"></lucide-icon>
           <span>Diccionario</span>
         </a>
-        <a routerLink="/cursos" 
-           class="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-xl transition-all"
-           routerLinkActive="!text-brand-green !bg-white dark:!bg-zinc-900 shadow-sm font-semibold">
-          <lucide-icon name="graduation-cap" class="w-4 h-4"></lucide-icon>
-          <span>Cursos</span>
-        </a>
       </div>
 
       <!-- Right Actions: Theme Selector & User Profile / Auth -->
@@ -124,8 +118,8 @@ import { CommonModule } from '@angular/common';
               (click)="showProfileMenu.set(!showProfileMenu()); showThemeMenu.set(false)" 
               class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-zinc-100/80 dark:hover:bg-zinc-800/70 border border-transparent hover:border-zinc-200/60 dark:hover:border-zinc-700/60 transition-all">
               <div class="flex flex-col items-end hidden sm:flex">
-                <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Estudiante</span>
-                <span class="text-[11px] text-zinc-500 dark:text-zinc-400">Nivel 1</span>
+                <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 max-w-[120px] truncate">{{ userDisplayName }}</span>
+                <span class="text-[11px] text-zinc-500 dark:text-zinc-400">{{ userRoleOrLevel }}</span>
               </div>
               <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-green to-emerald-600 text-white flex items-center justify-center shadow-sm">
                 <lucide-icon name="user" class="w-4 h-4"></lucide-icon>
@@ -192,6 +186,27 @@ export class Navbar {
 
   showThemeMenu = signal(false);
   showProfileMenu = signal(false);
+
+  get currentUser() {
+    return this.authService.currentUser();
+  }
+
+  get userDisplayName(): string {
+    const user = this.currentUser;
+    if (!user) return 'Estudiante';
+    if (user.first_name) {
+      return `${user.first_name} ${user.last_name || ''}`.trim();
+    }
+    return user.username || 'Estudiante';
+  }
+
+  get userRoleOrLevel(): string {
+    const user = this.currentUser;
+    if (!user) return 'Nivel 1';
+    if (user.role === 'admin') return 'Administrador';
+    if (user.role === 'moderator') return 'Sabedor Wayuu';
+    return `Nivel ${user.level || 1}`;
+  }
 
   selectTheme(mode: ThemeMode) {
     this.ui.setTheme(mode);

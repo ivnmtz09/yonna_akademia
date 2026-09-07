@@ -10,6 +10,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'dashboard/perfil',
+    loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'diccionario',
     loadComponent: () => import('./features/dictionary/dictionary').then(m => m.DictionaryComponent)
   },

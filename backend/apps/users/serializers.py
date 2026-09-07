@@ -150,9 +150,32 @@ class UserRoleUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["role"]
-        
+
     def validate_role(self, value):
-        valid_roles = ["admin", "moderator", "user"]
+        valid_roles = [User.ROLE_ADMIN, User.ROLE_MODERATOR, User.ROLE_USER]
         if value not in valid_roles:
             raise serializers.ValidationError(f"Rol inválido. Debe ser uno de: {', '.join(valid_roles)}")
         return value
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        current_user = getattr(request, "user", None)
+        target_user = self.instance
+        new_role = attrs.get("role")
+
+        if target_user and new_role:
+            # 1. No permitir que un admin que no es superuser modifique el rol de un superusuario
+            if target_user.is_superuser and current_user and not current_user.is_superuser:
+                raise serializers.ValidationError("Solo un superusuario puede modificar el rol de otro superusuario.")
+
+            # 2. Prevenir auto-degradación si es el único administrador activo
+            if current_user and target_user.id == current_user.id and target_user.role == User.ROLE_ADMIN and new_role != User.ROLE_ADMIN:
+                other_admins = User.objects.filter(
+                    role=User.ROLE_ADMIN, is_active=True
+                ).exclude(id=current_user.id).count()
+                if other_admins == 0:
+                    raise serializers.ValidationError(
+                        "No puedes degradar tu propio rol de administrador porque eres el único administrador activo en la plataforma."
+                    )
+
+        return attrs

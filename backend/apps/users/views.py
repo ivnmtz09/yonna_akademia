@@ -18,7 +18,7 @@ from .serializers import (
     UserRoleUpdateSerializer,
 )
 from .google_auth import google_authenticate
-from .permissions import IsAdmin, IsAdminOrModerator
+from .permissions import IsAdmin, IsAdminOrModerator, IsSelfOrAdmin
 
 User = get_user_model()
 
@@ -122,7 +122,7 @@ class CurrentUserView(generics.RetrieveAPIView):
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsSelfOrAdmin]
 
 
 # ------------------------------

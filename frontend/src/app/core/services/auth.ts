@@ -20,7 +20,80 @@ export class AuthService {
   private basePath = inject(BASE_PATH);
 
   public isAuthenticated = signal<boolean>(this.tokenService.hasToken());
-  public currentUser = signal<any>(null);
+  public currentUser = signal<any>(this.getInitialUser());
+
+  constructor() {
+    if (this.tokenService.hasToken() && !this.tokenService.isTokenExpired()) {
+      this.fetchProfile().subscribe({
+        error: () => {}
+      });
+    }
+  }
+
+  private getInitialUser(): any {
+    const token = this.tokenService.getAccessToken();
+    if (token && !this.tokenService.isTokenExpired(token)) {
+      const decoded = this.tokenService.decodeToken(token);
+      if (decoded) {
+        return {
+          id: decoded.user_id || decoded.sub,
+          email: decoded.email,
+          username: decoded.username,
+          role: decoded.role || 'user',
+          level: decoded.level || 1,
+          xp: decoded.xp || 0,
+        };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Obtiene el perfil completo del usuario autenticado
+   */
+  fetchProfile(): Observable<any> {
+    return this.http.get<any>(`${this.basePath}/api/auth/profile/`).pipe(
+      tap((userData: any) => {
+        if (userData) {
+          const current = this.currentUser() || {};
+          this.currentUser.set({
+            ...current,
+            id: userData.id,
+            email: userData.email,
+            username: userData.username,
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            bio: userData.bio,
+            role: userData.role || current.role || 'user',
+            level: userData.level ?? current.level ?? 1,
+            xp: userData.xp ?? current.xp ?? 0,
+            date_joined: userData.date_joined,
+            profile: userData.profile || current.profile || {}
+          });
+        }
+      }),
+      catchError((error) => this.handleError(error))
+    );
+  }
+
+  /**
+   * Actualiza el perfil del usuario autenticado
+   */
+  updateProfile(data: any): Observable<any> {
+    return this.http.patch<any>(`${this.basePath}/api/auth/profile/`, data).pipe(
+      tap((updatedUser: any) => {
+        if (updatedUser) {
+          const current = this.currentUser() || {};
+          this.currentUser.set({
+            ...current,
+            ...updatedUser,
+            profile: updatedUser.profile || current.profile || {}
+          });
+        }
+      }),
+      catchError((error) => this.handleError(error))
+    );
+  }
 
   /**
    * Realiza el login o registro mediante Google OAuth2 (id_token)
@@ -33,16 +106,18 @@ export class AuthService {
           this.isAuthenticated.set(true);
 
           const decoded = this.tokenService.decodeToken(response.access);
-          if (decoded) {
-            this.currentUser.set({
-              id: decoded.user_id || decoded.sub,
-              email: decoded.email,
-              username: decoded.username || `${response.first_name || ''} ${response.last_name || ''}`.trim(),
-              role: decoded.role || response.role || 'user',
-              level: decoded.level || response.level || 1,
-              xp: decoded.xp || response.xp || 0,
-            });
-          }
+          this.currentUser.set({
+            id: response.id || decoded?.user_id || decoded?.sub,
+            email: response.email || decoded?.email,
+            username: response.username || decoded?.username || `${response.first_name || ''} ${response.last_name || ''}`.trim(),
+            first_name: response.first_name,
+            last_name: response.last_name,
+            role: response.role || decoded?.role || 'user',
+            level: response.level || decoded?.level || 1,
+            xp: response.xp || decoded?.xp || 0,
+            profile: response.profile || {}
+          });
+          this.fetchProfile().subscribe({ error: () => {} });
         }
       }),
       catchError((error) => this.handleError(error))
@@ -62,16 +137,20 @@ export class AuthService {
 
           // Decodificar y guardar información del usuario
           const decoded = this.tokenService.decodeToken(response.access);
-          if (decoded) {
-              this.currentUser.set({
-                id: decoded.user_id || decoded.sub,
-                email: decoded.email,
-                username: decoded.username,
-                role: decoded.role || 'user',
-                level: decoded.level || 1,
-                xp: decoded.xp || 0,
-              });
-          }
+          this.currentUser.set({
+            id: response.id || decoded?.user_id || decoded?.sub,
+            email: response.email || decoded?.email,
+            username: response.username || decoded?.username,
+            first_name: response.first_name,
+            last_name: response.last_name,
+            bio: response.bio,
+            role: response.role || decoded?.role || 'user',
+            level: response.level || decoded?.level || 1,
+            xp: response.xp || decoded?.xp || 0,
+            date_joined: response.date_joined,
+            profile: response.profile || {}
+          });
+          this.fetchProfile().subscribe({ error: () => {} });
         }
       }),
       catchError((error) => this.handleError(error)),
