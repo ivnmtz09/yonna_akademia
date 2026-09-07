@@ -15,94 +15,96 @@ import { takeUntil } from 'rxjs/operators';
   template: `
     @if (ui.isLoginModalOpen()) {
       <div
-        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 dark:bg-black/70 backdrop-blur-md transition-opacity"
         (click)="closeModal()"
       >
         <div
-          class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-8 relative mx-4 transform transition-all border border-gray-100 dark:border-slate-700"
+          class="glass-modal rounded-3xl w-full max-w-md p-8 relative mx-4 transform transition-all"
           (click)="$event.stopPropagation()"
         >
           <button
             (click)="closeModal()"
-            class="absolute right-5 top-5 p-2 bg-gray-50 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-all"
+            class="absolute right-5 top-5 p-2 rounded-full text-zinc-400 hover:text-zinc-700 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
             [ngClass]="{'pointer-events-none opacity-50': isLoading}"
           >
             <lucide-icon name="x" class="w-5 h-5"></lucide-icon>
           </button>
 
           <div class="text-center mb-6 mt-2">
-            <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight">
+            <h2 class="text-3xl font-display font-extrabold text-zinc-900 dark:text-white mb-1.5 tracking-tight">
               Bienvenido de nuevo
             </h2>
-            <p class="text-gray-500 dark:text-gray-400 font-medium">Ingresa a tu cuenta para continuar</p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 font-medium">Ingresa a tu cuenta de Yonna Akademia</p>
           </div>
 
           @if (loginError) {
             <div
-              class="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm font-medium text-center"
+              class="mb-6 p-3.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 rounded-2xl text-xs font-medium text-center"
             >
               {{ loginError }}
             </div>
           }
 
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-5">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
             <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5"
-                >Correo Electrónico</label
-              >
+              <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-1.5">
+                Correo Electrónico
+              </label>
               <input
                 type="email"
                 formControlName="email"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                class="w-full px-4 py-3 rounded-xl glass-input text-sm"
                 [ngClass]="{
-                  'border-red-300 focus:border-red-500 focus:ring-red-200': isFieldInvalid('email'),
+                  '!border-red-400 focus:!ring-red-300': isFieldInvalid('email'),
                 }"
-                placeholder="tu@email.com"
+                placeholder="tu@correo.com"
               />
               @if (isFieldInvalid('email')) {
-                <p class="text-red-500 text-xs mt-1.5 font-medium">
+                <p class="text-red-500 text-xs mt-1 font-medium">
                   @if (loginForm.get('email')?.hasError('required')) {
-                    Por favor, ingresa tu correo electrónico.
+                    Ingresa tu correo electrónico.
                   } @else if (loginForm.get('email')?.hasError('email')) {
-                    Por favor, ingresa un correo válido.
+                    Ingresa un correo electrónico válido.
                   }
                 </p>
               }
             </div>
+
             <div>
-              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Contraseña</label>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-1.5">
+                Contraseña
+              </label>
               <input
                 type="password"
                 formControlName="password"
-                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green transition-all text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                class="w-full px-4 py-3 rounded-xl glass-input text-sm"
                 [ngClass]="{
-                  'border-red-300 focus:border-red-500 focus:ring-red-200':
-                    isFieldInvalid('password'),
+                  '!border-red-400 focus:!ring-red-300': isFieldInvalid('password'),
                 }"
                 placeholder="••••••••"
               />
               @if (isFieldInvalid('password')) {
-                <p class="text-red-500 text-xs mt-1.5 font-medium">La contraseña es requerida.</p>
+                <p class="text-red-500 text-xs mt-1 font-medium">La contraseña es requerida.</p>
               }
             </div>
 
-            <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center justify-between pt-1">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  class="w-4 h-4 rounded text-brand-green border-gray-300 dark:border-slate-600 focus:ring-brand-green bg-gray-50 dark:bg-slate-800"
+                  class="w-4 h-4 rounded text-brand-green border-zinc-300 dark:border-zinc-700 focus:ring-brand-green bg-white dark:bg-zinc-800"
                 />
-                <span class="text-sm text-gray-600 dark:text-gray-300 font-medium">Recordarme</span>
+                <span class="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Recordarme</span>
               </label>
-              <a href="#" class="text-sm text-brand-green hover:underline font-bold"
-                >¿Olvidaste tu clave?</a
-              >
+              <a href="#" class="text-xs text-brand-green dark:text-emerald-400 hover:underline font-semibold">
+                ¿Olvidaste tu contraseña?
+              </a>
             </div>
 
             <button
               type="submit"
               [ngClass]="{'pointer-events-none opacity-50': isLoading}"
-              class="w-full bg-brand-green text-white font-bold py-4 rounded-xl hover:bg-opacity-90 hover:shadow-lg hover:shadow-brand-green/20 transition-all mt-6 text-lg flex items-center justify-center gap-2"
+              class="w-full bg-brand-green hover:bg-emerald-800 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-brand-green/20 mt-4 text-base flex items-center justify-center gap-2"
             >
               @if (isLoading) {
                 <svg
@@ -125,23 +127,23 @@ import { takeUntil } from 'rxjs/operators';
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Ingresando...
+                <span>Ingresando...</span>
               } @else {
-                Ingresar a mi cuenta
+                <span>Ingresar a mi cuenta</span>
               }
             </button>
           </form>
 
-            <p class="text-center text-sm text-gray-600 dark:text-gray-300 mt-8 font-medium">
-              ¿No tienes una cuenta?
-              <button
-                (click)="openRegister()"
-                class="text-brand-orange font-bold hover:underline ml-1"
-                [ngClass]="{'pointer-events-none opacity-50': isLoading}"
-              >
-                Regístrate aquí
-              </button>
-            </p>
+          <p class="text-center text-xs text-zinc-500 dark:text-zinc-400 mt-6 font-medium">
+            ¿No tienes una cuenta?
+            <button
+              (click)="openRegister()"
+              class="text-brand-orange font-bold hover:underline ml-1"
+              [ngClass]="{'pointer-events-none opacity-50': isLoading}"
+            >
+              Regístrate aquí
+            </button>
+          </p>
         </div>
       </div>
     }

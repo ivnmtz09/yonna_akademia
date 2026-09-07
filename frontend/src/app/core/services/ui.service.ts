@@ -1,47 +1,103 @@
 import { Injectable, signal, effect } from '@angular/core';
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 @Injectable({
   providedIn: 'root'
 })
 export class UiService {
   private readonly _isLoginModalOpen = signal(false);
   private readonly _isRegisterModalOpen = signal(false);
-  private readonly _isSidebarOpen = signal(false); // Renamed from _isMobileMenuOpen
+  private readonly _isSidebarOpen = signal(false);
   private readonly _isMobile = signal(this.checkMobile());
-  private readonly _isDarkMode = signal(this.getDarkModeFromLocalStorage());
-  private readonly _isSidebarExpanded = signal(false); // New signal for sidebar expanded state
+  private readonly _themeMode = signal<ThemeMode>(this.getInitialTheme());
+  private readonly _isDarkMode = signal<boolean>(false);
+  private readonly _isSidebarExpanded = signal(false);
 
   readonly isLoginModalOpen = this._isLoginModalOpen.asReadonly();
   readonly isRegisterModalOpen = this._isRegisterModalOpen.asReadonly();
-  readonly isSidebarOpen = this._isSidebarOpen.asReadonly(); // Renamed
+  readonly isSidebarOpen = this._isSidebarOpen.asReadonly();
   readonly isMobile = this._isMobile.asReadonly();
+  readonly themeMode = this._themeMode.asReadonly();
   readonly isDarkMode = this._isDarkMode.asReadonly();
-  readonly isSidebarExpanded = this._isSidebarExpanded.asReadonly(); // Expose sidebar expanded state
+  readonly isSidebarExpanded = this._isSidebarExpanded.asReadonly();
+
+  private mediaQueryListener?: (e: MediaQueryListEvent) => void;
 
   constructor() {
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', () => this.updateMobileStatus());
-      effect(() => {
-        if (this._isDarkMode()) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
+
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      this.mediaQueryListener = () => {
+        if (this._themeMode() === 'system') {
+          this.applyTheme('system');
         }
-        localStorage.setItem('darkMode', this._isDarkMode().toString());
+      };
+      mediaQuery.addEventListener('change', this.mediaQueryListener);
+
+      effect(() => {
+        const mode = this._themeMode();
+        this.applyTheme(mode);
+        try {
+          localStorage.setItem('theme', mode);
+        } catch {
+          // ignore localStorage error
+        }
       });
     }
   }
 
-  private getDarkModeFromLocalStorage(): boolean {
+  private getInitialTheme(): ThemeMode {
     if (typeof localStorage !== 'undefined') {
-      const storedValue = localStorage.getItem('darkMode');
-      return storedValue === 'true';
+      const stored = localStorage.getItem('theme');
+      if (stored === 'light' || stored === 'dark' || stored === 'system') {
+        return stored;
+      }
+      // Retrocompatibilidad con clave 'darkMode' anterior
+      const legacyDarkMode = localStorage.getItem('darkMode');
+      if (legacyDarkMode === 'true') return 'dark';
+      if (legacyDarkMode === 'false') return 'light';
     }
-    return false;
+    return 'system';
   }
 
-  toggleDarkMode() {
-    this._isDarkMode.update(value => !value);
+  private applyTheme(mode: ThemeMode): void {
+    if (typeof document === 'undefined') return;
+
+    let shouldBeDark = false;
+    if (mode === 'dark') {
+      shouldBeDark = true;
+    } else if (mode === 'light') {
+      shouldBeDark = false;
+    } else {
+      // system
+      if (typeof window !== 'undefined') {
+        shouldBeDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+    }
+
+    this._isDarkMode.set(shouldBeDark);
+    if (shouldBeDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+
+  setTheme(mode: ThemeMode): void {
+    this._themeMode.set(mode);
+  }
+
+  toggleDarkMode(): void {
+    const current = this._themeMode();
+    if (current === 'light') {
+      this.setTheme('dark');
+    } else if (current === 'dark') {
+      this.setTheme('system');
+    } else {
+      this.setTheme('light');
+    }
   }
 
   // Sidebar management
@@ -68,7 +124,6 @@ export class UiService {
   private updateMobileStatus(): void {
     this._isMobile.set(this.checkMobile());
   }
-
 
   // Modal de Inicio de Sesión
   openLoginModal() {

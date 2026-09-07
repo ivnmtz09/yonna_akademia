@@ -3,5 +3,5 @@
 }
 
 .active {
-  @apply bg-gray-50 dark:bg-slate-800 text-brand-green;
+  @apply bg-brand-light-green/70 dark:bg-brand-green/20 text-brand-green dark:text-emerald-400 font-semibold shadow-sm;
 }

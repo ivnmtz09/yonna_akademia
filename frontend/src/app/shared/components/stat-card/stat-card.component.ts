@@ -7,19 +7,19 @@ import { LucideAngularModule } from 'lucide-angular';
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-      <div class="flex items-center gap-4 mb-4">
-        <div class="w-12 h-12 rounded-xl bg-brand-light-green dark:bg-brand-green/20 flex items-center justify-center">
-          <lucide-icon [name]="icon()" class="w-6 h-6 text-brand-green"></lucide-icon>
+    <div class="glass-card glass-card-hover rounded-2xl p-5">
+      <div class="flex items-center gap-3.5 mb-3.5">
+        <div class="w-11 h-11 rounded-xl bg-brand-light-green/90 dark:bg-brand-green/20 border border-brand-green/10 dark:border-emerald-500/20 flex items-center justify-center text-brand-green dark:text-emerald-400">
+          <lucide-icon [name]="icon()" class="w-5 h-5"></lucide-icon>
         </div>
         <div>
-          <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">{{ label() }}</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ value() }}</p>
+          <p class="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">{{ label() }}</p>
+          <p class="text-2xl font-display font-extrabold text-zinc-900 dark:text-white mt-0.5">{{ value() }}</p>
         </div>
       </div>
       @if (progress() !== undefined) {
-        <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-2">
-          <div class="bg-brand-green h-2 rounded-full" [style.width.%]="progress()"></div>
+        <div class="w-full bg-zinc-100 dark:bg-zinc-800/80 rounded-full h-2 overflow-hidden border border-zinc-200/50 dark:border-zinc-700/50">
+          <div class="bg-gradient-to-r from-brand-green to-emerald-500 h-2 rounded-full transition-all duration-500" [style.width.%]="progress()"></div>
         </div>
       }
     </div>

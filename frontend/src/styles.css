@@ -1,9 +1,80 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-white text-gray-900 dark:bg-slate-950 dark:text-gray-100;
+@layer base {
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-zinc-900 dark:bg-[#121214] dark:text-zinc-100 antialiased transition-colors duration-200 selection:bg-brand-green/20 selection:text-brand-green;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Glassmorphism Design Tokens */
+@layer utilities {
+  .glass-card {
+    @apply bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-zinc-200/60 dark:border-zinc-800/80 shadow-glass dark:shadow-glass-dark transition-all duration-300;
+  }
+
+  .glass-card-hover {
+    @apply hover:bg-white/90 dark:hover:bg-zinc-900/90 hover:border-brand-green/40 dark:hover:border-brand-green/40 hover:shadow-xl hover:-translate-y-0.5;
+  }
+
+  .glass-panel {
+    @apply bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl border border-zinc-200/70 dark:border-zinc-800/90;
+  }
+
+  .glass-nav {
+    @apply bg-white/75 dark:bg-[#121214]/75 backdrop-blur-2xl border-b border-zinc-200/60 dark:border-zinc-800/80;
+  }
+
+  .glass-input {
+    @apply bg-white/70 dark:bg-zinc-800/50 backdrop-blur-md border border-zinc-200 dark:border-zinc-700/70 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green transition-all;
+  }
+
+  .glass-modal {
+    @apply bg-white/85 dark:bg-zinc-900/85 backdrop-blur-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-2xl;
+  }
+}
+
+/* Page Transitions & Animations */
+@keyframes pageFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes pageFadeInSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+::view-transition-old(root) {
+  animation: 160ms cubic-bezier(0.4, 0, 1, 1) both pageFadeOut;
+}
+
+::view-transition-new(root) {
+  animation: 260ms cubic-bezier(0, 0, 0.2, 1) both pageFadeInSlideUp;
+}
+
+.page-enter {
+  animation: pageFadeInSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

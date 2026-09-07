@@ -16,88 +16,91 @@ interface DictionaryEntry {
   standalone: true,
   imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
-    <div class="min-h-screen bg-gray-50 dark:bg-slate-950 p-4 md:p-8">
+    <div class="max-w-7xl mx-auto space-y-8">
       <!-- Header -->
-      <div class="max-w-7xl mx-auto mb-8">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="p-3 bg-brand-green/10 dark:bg-brand-green/20 rounded-xl">
-            <lucide-icon name="book-open" class="w-8 h-8 text-brand-green"></lucide-icon>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-brand-green/10 dark:bg-brand-green/20 border border-brand-green/20 flex items-center justify-center text-brand-green dark:text-emerald-400 shadow-sm">
+            <lucide-icon name="book-open" class="w-6 h-6"></lucide-icon>
           </div>
           <div>
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-              Diccionario Wayuu-Español
+            <h1 class="text-3xl md:text-4xl font-display font-extrabold text-zinc-900 dark:text-white tracking-tight">
+              Diccionario Wayuu - Español
             </h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">
-              Explora el vocabulario de la lengua Wayuunaiki
+            <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Vocabulario, traducción fonética y categorías lingüísticas
             </p>
           </div>
         </div>
 
         <!-- Search Bar -->
-        <div class="relative max-w-2xl">
-          <lucide-icon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></lucide-icon>
+        <div class="relative w-full md:w-96">
+          <lucide-icon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400"></lucide-icon>
           <input
             type="text"
-            placeholder="Buscar palabra en Wayuu o Español..."
-            class="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-200 dark:border-slate-700
-                   bg-white dark:bg-slate-800 text-gray-900 dark:text-white
-                   placeholder-gray-400 dark:placeholder-gray-500
-                   focus:outline-none focus:ring-2 focus:ring-brand-green/30 focus:border-brand-green
-                   transition-all text-lg"
+            placeholder="Buscar en Wayuu o Español..."
+            class="glass-input pl-11 pr-4 py-3 rounded-2xl w-full text-sm"
             [ngModel]="searchTerm()"
             (ngModelChange)="searchTerm.set($event)"
           />
         </div>
-
-        <!-- Results counter -->
-        @if (entries().length > 0 && filteredEntries().length > 0) {
-          <p class="text-sm text-gray-600 dark:text-gray-400 mt-4">
-            {{ filteredEntries().length }} palabra{{ filteredEntries().length !== 1 ? 's' : '' }} encontrada{{ filteredEntries().length !== 1 ? 's' : '' }}
-          </p>
-        }
       </div>
+
+      <!-- Results Counter -->
+      @if (entries().length > 0 && filteredEntries().length > 0) {
+        <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+          <span>{{ filteredEntries().length }} término{{ filteredEntries().length !== 1 ? 's' : '' }}</span>
+          @if (searchTerm()) {
+            <span>Filtrado por: "{{ searchTerm() }}"</span>
+          }
+        </div>
+      }
 
       <!-- Loading State -->
       @if (loading()) {
-        <div class="max-w-7xl mx-auto text-center py-20">
-          <lucide-icon name="loader-circle" class="w-12 h-12 text-brand-green animate-spin mx-auto mb-4"></lucide-icon>
-          <p class="text-gray-500 dark:text-gray-400">Cargando diccionario...</p>
+        <div class="text-center py-20">
+          <lucide-icon name="loader-circle" class="w-10 h-10 text-brand-green animate-spin mx-auto mb-3"></lucide-icon>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400">Cargando diccionario...</p>
         </div>
       }
 
       <!-- Error State -->
       @if (error(); as errorMsg) {
-        <div class="max-w-7xl mx-auto text-center py-20">
-          <lucide-icon name="alert-triangle" class="w-20 h-20 text-red-400 mx-auto mb-4"></lucide-icon>
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error al cargar</h3>
-          <p class="text-gray-600 dark:text-gray-400">{{ errorMsg }}</p>
+        <div class="glass-card max-w-lg mx-auto text-center p-8 rounded-3xl">
+          <lucide-icon name="alert-triangle" class="w-12 h-12 text-amber-500 mx-auto mb-3"></lucide-icon>
+          <h3 class="text-xl font-display font-bold text-zinc-900 dark:text-white mb-2">No se pudo cargar el vocabulario</h3>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ errorMsg }}</p>
         </div>
       }
 
       <!-- Dictionary Grid -->
       @if (!loading() && !error() && filteredEntries().length > 0) {
-        <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
           @for (entry of filteredEntries(); track entry.wayuu) {
-            <div class="group bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-100 dark:border-slate-700
-                        hover:border-brand-green/50 dark:hover:border-brand-green/50
-                        hover:shadow-lg hover:shadow-brand-green/5
-                        transition-all duration-300 cursor-pointer">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="text-2xl font-bold text-brand-green dark:text-brand-green/90">
-                  {{ entry.wayuu }}
-                </h3>
-                <span class="opacity-0 group-hover:opacity-100 transition-opacity">
-                  <lucide-icon name="volume-2" class="w-5 h-5 text-gray-400 hover:text-brand-green"></lucide-icon>
-                </span>
+            <div class="glass-card glass-card-hover rounded-2xl p-5 flex flex-col justify-between group">
+              <div>
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <h3 class="text-xl font-display font-bold text-brand-green dark:text-emerald-400 group-hover:text-emerald-500 transition-colors">
+                    {{ entry.wayuu }}
+                  </h3>
+                  <button 
+                    type="button" 
+                    class="p-1.5 rounded-lg text-zinc-400 hover:text-brand-green hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                    title="Pronunciación">
+                    <lucide-icon name="volume-2" class="w-4 h-4"></lucide-icon>
+                  </button>
+                </div>
+                <p class="text-base font-semibold text-zinc-800 dark:text-zinc-200">
+                  {{ entry.spanish }}
+                </p>
               </div>
-              <p class="text-lg text-gray-900 dark:text-slate-100 font-medium">
-                {{ entry.spanish }}
-              </p>
+
               @if (entry.category) {
-                <span class="inline-block mt-3 px-3 py-1 bg-brand-light-green dark:bg-brand-green/20
-                             text-brand-green dark:text-brand-green/90 text-sm font-medium rounded-full">
-                  {{ entry.category }}
-                </span>
+                <div class="mt-4 pt-3 border-t border-zinc-200/50 dark:border-zinc-800/60">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-light-green/80 dark:bg-brand-green/20 text-brand-green dark:text-emerald-300 border border-brand-green/10">
+                    {{ entry.category }}
+                  </span>
+                </div>
               }
             </div>
           }
@@ -106,26 +109,26 @@ interface DictionaryEntry {
 
       <!-- Empty after search -->
       @if (!loading() && !error() && entries().length > 0 && filteredEntries().length === 0) {
-        <div class="max-w-7xl mx-auto text-center py-20">
-          <lucide-icon name="search-x" class="w-20 h-20 text-gray-300 dark:text-slate-600 mx-auto mb-4"></lucide-icon>
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            No se encontraron resultados
+        <div class="glass-card max-w-md mx-auto text-center py-16 px-6 rounded-3xl">
+          <lucide-icon name="search-x" class="w-14 h-14 text-zinc-300 dark:text-zinc-600 mx-auto mb-3"></lucide-icon>
+          <h3 class="text-xl font-display font-bold text-zinc-900 dark:text-white mb-1.5">
+            Sin coincidencias
           </h3>
-          <p class="text-gray-600 dark:text-gray-400">
-            Intenta con otra palabra o término de búsqueda
+          <p class="text-sm text-zinc-500 dark:text-zinc-400">
+            No encontramos palabras que coincidan con "{{ searchTerm() }}"
           </p>
         </div>
       }
 
       <!-- Empty from API -->
       @if (!loading() && !error() && entries().length === 0) {
-        <div class="max-w-7xl mx-auto text-center py-20">
-          <lucide-icon name="book-x" class="w-20 h-20 text-gray-300 dark:text-slate-600 mx-auto mb-4"></lucide-icon>
-          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            No hay palabras disponibles
+        <div class="glass-card max-w-md mx-auto text-center py-16 px-6 rounded-3xl">
+          <lucide-icon name="book-x" class="w-14 h-14 text-zinc-300 dark:text-zinc-600 mx-auto mb-3"></lucide-icon>
+          <h3 class="text-xl font-display font-bold text-zinc-900 dark:text-white mb-1.5">
+            Diccionario en preparación
           </h3>
-          <p class="text-gray-600 dark:text-gray-400">
-            El diccionario está vacío actualmente
+          <p class="text-sm text-zinc-500 dark:text-zinc-400">
+            Estamos indexando nuevas entradas de vocabulario.
           </p>
         </div>
       }

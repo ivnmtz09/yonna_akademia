@@ -42,3 +42,14 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment variables & secrets
+.env
+.env.*
+*.env
+!.env.example
+
+# Dynamic environment files from scripts/set-env.js
+/src/environments/environment.ts
+/src/environments/environment.development.ts
+
