@@ -87,10 +87,9 @@ def notify_new_quiz(sender, instance, created, **kwargs):
         return
 
     # Notificar a usuarios inscritos en el curso
-    from apps.courses.models import Enrollment
     enrollements = Enrollment.objects.filter(
         course=instance.course,
-        is_active=True
+        course__is_active=True
     ).select_related('user')
     
     notifs = []

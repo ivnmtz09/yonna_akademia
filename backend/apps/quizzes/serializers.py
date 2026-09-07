@@ -54,6 +54,14 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = ["id", "text", "question_type", "options", "order", "explanation"]
         read_only_fields = ["id"]
 
+    def to_representation(self, instance):
+        if isinstance(instance.options, list) and instance.options and isinstance(instance.options[0], str):
+            instance.options = [
+                {"id": chr(ord('a') + i), "text": opt, "is_correct": (opt.strip().lower() == instance.correct_answer.strip().lower())}
+                for i, opt in enumerate(instance.options)
+            ]
+        return super().to_representation(instance)
+
     def validate(self, attrs):
         question_type = attrs.get("question_type", "multiple_choice")
         options = attrs.get("options", [])

@@ -103,19 +103,20 @@ class GamificationViewSet(viewsets.GenericViewSet):
         if data is None:
             qs = (
                 XPTransaction.objects
-                .values("user_id", "user__username")
+                .values("user_id", "user__username", "user__first_name", "user__last_name", "user__email")
                 .annotate(total_xp=Sum("amount"))
                 .order_by("-total_xp")[:limit]
             )
-            data = [
-                {
+            data = []
+            for idx, entry in enumerate(qs):
+                full_name = f"{entry.get('user__first_name') or ''} {entry.get('user__last_name') or ''}".strip()
+                display_name = full_name or entry.get("user__username") or (entry.get("user__email", "").split("@")[0] if entry.get("user__email") else f"Usuario #{entry['user_id']}")
+                data.append({
                     "rank": idx + 1,
                     "user_id": entry["user_id"],
-                    "username": entry["user__username"],
+                    "username": display_name,
                     "total_xp": entry["total_xp"] or 0,
-                }
-                for idx, entry in enumerate(qs)
-            ]
+                })
             cache.set(cache_key, data, LEADERBOARD_CACHE_TTL)
 
         return Response(LeaderboardEntrySerializer(data, many=True).data)
